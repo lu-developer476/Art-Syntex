@@ -49,8 +49,10 @@ npm run build
 2. Deploy:
 
 ```bash
-firebase deploy --only hosting
+npm run firebase:deploy:hosting
 ```
+
+> Nota: la configuración de Firebase está en `src/firebase/firebase.json`, por eso los scripts de deploy usan `--config`.
 
 ## Firestore sugerido
 
