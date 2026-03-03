@@ -1,4 +1,4 @@
-# Art-Synt — Cyberware Store (Portfolio Ready)
+# Art-Syntex — Cyberware Store (Portfolio Ready)
 
 E-commerce conceptual estilo cyberpunk construido con **React + TypeScript + Tailwind + Firebase**.
 
@@ -52,7 +52,7 @@ npm run build
 npm run firebase:deploy:hosting
 ```
 
-> Nota: el deploy quedó fijado al proyecto `art-synt-13037` y al sitio de Hosting `art-synt-13037` usando target `production` en `firebase.json/.firebaserc`, para evitar publicar por error en otro site.
+> Nota: el deploy quedó fijado al proyecto `art-syntex` y al sitio de Hosting `art-syntex` usando target `production` en `firebase.json/.firebaserc`, para evitar publicar por error en otro site.
 
 ## Firestore sugerido
 
@@ -99,7 +99,7 @@ Campos por documento:
 npx firebase-tools login
 ```
 
-2. Generá el build y desplegá Hosting al target correcto (`production` → `art-synt-13037`):
+2. Generá el build y desplegá Hosting al target correcto (`production` → `art-syntex`):
 
 ```bash
 npm install
@@ -115,12 +115,12 @@ npm run firebase:deploy:firestore
 
 ## Checklist cuando aparece "Site Not Found" en Firebase Hosting
 
-Si en `https://art-synt-13037.web.app` ves **Site Not Found** y en Console dice **"Esperando tu primera versión"**, el sitio todavía no tiene una versión publicada.
+Si en `https://art-syntex.web.app` ves **Site Not Found** y en Console dice **"Esperando tu primera versión"**, el sitio todavía no tiene una versión publicada.
 
 Seguí este checklist en orden:
 
 1. **Firebase Console → Hosting**
-   - Confirmá que estás en el proyecto `art-synt-13037`.
+   - Confirmá que estás en el proyecto `art-syntex`.
    - Si ves “Esperando tu primera versión”, falta desplegar desde CLI.
 
 2. **Habilitar Authentication (obligatorio para login/registro de la app)**
@@ -148,15 +148,15 @@ Seguí este checklist en orden:
 5. **Validar resultado**
    - En terminal deberías ver `Deploy complete!`.
    - En Firebase Console → Hosting debería aparecer una versión en “Versiones anteriores”.
-   - Abrí `https://art-synt-13037.web.app` y hacé hard refresh (`Ctrl + F5`).
+   - Abrí `https://art-syntex.web.app` y hacé hard refresh (`Ctrl + F5`).
 
 ### Errores típicos y cómo corregirlos
 
 - **Deploy successful pero sigue "Site Not Found"**
-  - Verificá que el deploy vaya al target `production` (site `art-synt-13037`) y no a otro sitio del proyecto.
+  - Verificá que el deploy vaya al target `production` (site `art-syntex`) y no a otro sitio del proyecto.
   - Ejecutá explícitamente:
     ```bash
-    npx firebase-tools deploy --only hosting:production --project art-synt-13037
+    npx firebase-tools deploy --only hosting:production --project art-syntex
     ```
 
 - **Deploy de carpeta vacía**
@@ -165,12 +165,8 @@ Seguí este checklist en orden:
 
 - **Pantalla en blanco después del deploy**
   - Revisá errores de JS en consola del navegador.
-  - Confirmá que el `firebaseConfig` apunte al mismo proyecto (`art-synt-13037`) y que Firestore/Auth estén habilitados.
+  - Confirmá que el `firebaseConfig` apunte al mismo proyecto (`art-syntex`) y que Firestore/Auth estén habilitados.
 
-codex/find-config.ts-setup-options-hu10ak
-=======
-
-main
 ### Si falla con `firebase: not found`
 
 El repo ahora ejecuta Firebase CLI con `npx firebase-tools` en los scripts de `package.json`, así no depende de tener `firebase` global instalado.
@@ -192,5 +188,4 @@ npx firebase-tools target:apply hosting production art-synt-13037 --project art-
 ```
 
 > Si responde que el target ya existe, está bien: significa que `hosting:production` apunta al sitio correcto.
-=======
 main
