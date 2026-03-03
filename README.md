@@ -119,3 +119,58 @@ npm run firebase:deploy:hosting
 ```bash
 npm run firebase:deploy:firestore
 ```
+
+## Checklist cuando aparece "Site Not Found" en Firebase Hosting
+
+Si en `https://art-synt-13037.web.app` ves **Site Not Found** y en Console dice **"Esperando tu primera versión"**, el sitio todavía no tiene una versión publicada.
+
+Seguí este checklist en orden:
+
+1. **Firebase Console → Hosting**
+   - Confirmá que estás en el proyecto `art-synt-13037`.
+   - Si ves “Esperando tu primera versión”, falta desplegar desde CLI.
+
+2. **Habilitar Authentication (obligatorio para login/registro de la app)**
+   - Firebase Console → Authentication → Sign-in method.
+   - Activá **Email/Password**.
+
+3. **Crear Firestore Database**
+   - Firebase Console → Firestore Database → Crear base de datos.
+   - Elegí modo **Production** o **Test** (según tu etapa) y una región.
+   - Luego publicá reglas e índices del repo:
+
+   ```bash
+   npm run firebase:deploy:firestore
+   ```
+
+4. **Deploy de Hosting (primer release)**
+
+   ```bash
+   npm install
+   npm run build
+   firebase login
+   firebase use art-synt-13037
+   npm run firebase:deploy:hosting
+   ```
+
+5. **Validar resultado**
+   - En terminal deberías ver `Deploy complete!`.
+   - En Firebase Console → Hosting debería aparecer una versión en “Versiones anteriores”.
+   - Abrí `https://art-synt-13037.web.app` y hacé hard refresh (`Ctrl + F5`).
+
+### Errores típicos y cómo corregirlos
+
+- **Deploy successful pero sigue "Site Not Found"**
+  - Revisá que no estés desplegando en otro proyecto (`firebase use`).
+  - Forzá proyecto en el comando:
+    ```bash
+    firebase deploy --only hosting --project art-synt-13037
+    ```
+
+- **Deploy de carpeta vacía**
+  - Este repo publica `dist` (`firebase.json` usa `"public": "dist"`).
+  - Si no corriste `npm run build`, `dist` no tendrá el bundle final.
+
+- **Pantalla en blanco después del deploy**
+  - Revisá errores de JS en consola del navegador.
+  - Confirmá que el `firebaseConfig` apunte al mismo proyecto (`art-synt-13037`) y que Firestore/Auth estén habilitados.
