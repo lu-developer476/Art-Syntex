@@ -174,3 +174,14 @@ Seguí este checklist en orden:
 - **Pantalla en blanco después del deploy**
   - Revisá errores de JS en consola del navegador.
   - Confirmá que el `firebaseConfig` apunte al mismo proyecto (`art-synt-13037`) y que Firestore/Auth estén habilitados.
+
+
+### Si falla con `firebase: not found`
+
+El repo ahora ejecuta Firebase CLI con `npx firebase-tools` en los scripts de `package.json`, así no depende de tener `firebase` global instalado.
+
+Si tu entorno bloquea `npx`, instalá Firebase CLI de forma global y volvé a ejecutar:
+
+```bash
+npm install -g firebase-tools
+```
