@@ -67,3 +67,23 @@ Campos por documento:
 - `featured` (boolean)
 
 > Si no hay documentos, la app los crea automáticamente al iniciar.
+
+
+## Configuración de Firebase (Auth + Firestore Orders)
+
+1. En **Firebase Console → Authentication → Sign-in method**, habilitá **Email/Password**.
+2. En **Firestore Database → Rules**, publicá las reglas de `firestore.rules` de este repo.
+3. (Opcional) En **Extensions**, instalá **Trigger Email** si querés que la colección `mail` envíe correos.
+
+### Flujo automático que ya implementa este proyecto
+
+- **Registro de cuenta**: al hacer clic en `Registrarse`, la app crea el usuario en Firebase Authentication y además crea el perfil del cliente en `users/{uid}`.
+- **Orden de compra**: al hacer clic en `Confirmar compra`, la app guarda una orden en la colección `purchaseOrders` con estado `pending`, items y total.
+
+### Estructura esperada en Firestore
+
+- `products/{productId}`: catálogo.
+- `users/{uid}`: perfil básico del cliente autenticado.
+- `purchaseOrders/{orderId}`: orden de compra generada automáticamente al confirmar carrito.
+- `notifications/{id}`: eventos internos de la app.
+- `mail/{id}`: mensajes para extensión de correo (si está activa).

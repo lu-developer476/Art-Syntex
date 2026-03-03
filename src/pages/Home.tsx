@@ -1,13 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut,
-  type User,
-} from 'firebase/auth'
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, type User } from 'firebase/auth'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase/config'
+import { createPurchaseOrder, registerCustomerAccount } from '../firebase/commerce'
 import { getOrSeedProducts } from '../firebase/products'
 import type { Product } from '../data/products'
 
@@ -94,7 +89,7 @@ export default function Home() {
   const handleSignUp = async () => {
     setAuthMessage(null)
     try {
-      const credential = await createUserWithEmailAndPassword(auth, authEmail, authPassword)
+      const credential = await registerCustomerAccount(auth, db, authEmail, authPassword)
       await addDoc(collection(db, 'mail'), {
         to: [credential.user.email],
         message: {
@@ -128,17 +123,12 @@ export default function Home() {
       return
     }
 
-    await addDoc(collection(db, 'carts'), {
-      email: user.email,
-      items: cart.map((item) => ({
-        productId: item.product.id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-      })),
-      total: cartTotal,
-      createdAt: serverTimestamp(),
-    })
+    if (!user.email) {
+      setAuthMessage('No pudimos confirmar la compra porque tu cuenta no tiene correo válido.')
+      return
+    }
+
+    await createPurchaseOrder(db, user.uid, user.email, cart)
 
     await addNotification('Compra en revisión', 'Carrito enviado para confirmación de compra', {
       email: user.email ?? 'sin-email',
@@ -146,7 +136,7 @@ export default function Home() {
     })
 
     setCart([])
-    setAuthMessage('Compra preconfirmada: guardamos tu carrito en Firebase.')
+    setAuthMessage('Compra preconfirmada: Firebase creó tu orden en purchaseOrders.')
   }
 
   const handleContactSubmit = async (event: FormEvent) => {
