@@ -167,6 +167,10 @@ Seguí este checklist en orden:
   - Revisá errores de JS en consola del navegador.
   - Confirmá que el `firebaseConfig` apunte al mismo proyecto (`art-synt-13037`) y que Firestore/Auth estén habilitados.
 
+codex/find-config.ts-setup-options-hu10ak
+=======
+
+main
 ### Si falla con `firebase: not found`
 
 El repo ahora ejecuta Firebase CLI con `npx firebase-tools` en los scripts de `package.json`, así no depende de tener `firebase` global instalado.
@@ -176,6 +180,7 @@ Si tu entorno bloquea `npx`, instalá Firebase CLI de forma global y volvé a ej
 ```bash
 npm install -g firebase-tools
 ```
+codex/find-config.ts-setup-options-hu10ak
 
 
 ## Verificación rápida del target de Hosting
@@ -187,3 +192,5 @@ npx firebase-tools target:apply hosting production art-synt-13037 --project art-
 ```
 
 > Si responde que el target ya existe, está bien: significa que `hosting:production` apunta al sitio correcto.
+=======
+main
