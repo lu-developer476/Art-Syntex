@@ -52,7 +52,7 @@ npm run build
 npm run firebase:deploy:hosting
 ```
 
-> Nota: la configuración de Firebase está en `src/firebase/firebase.json`, por eso los scripts de deploy usan `--config`.
+> Nota: ahora la configuración de Firebase está en la raíz (`firebase.json` y `.firebaserc`) para que Firebase CLI detecte automáticamente el proyecto correcto.
 
 ## Firestore sugerido
 
@@ -89,3 +89,33 @@ Campos por documento:
 - `purchaseOrders/{orderId}`: orden de compra generada automáticamente al confirmar carrito.
 - `notifications/{id}`: eventos internos de la app.
 - `mail/{id}`: mensajes para extensión de correo (si está activa).
+
+
+## Pasos para publicar en Firebase Hosting
+
+1. Iniciá sesión en Firebase CLI:
+
+```bash
+firebase login
+```
+
+2. Verificá que estés en el proyecto correcto:
+
+```bash
+firebase use
+```
+
+Debe mostrar `art-synt-13037` (se define por defecto en `.firebaserc`).
+
+3. Generá el build y desplegá Hosting:
+
+```bash
+npm run build
+npm run firebase:deploy:hosting
+```
+
+4. Si querés subir reglas/índices de Firestore también:
+
+```bash
+npm run firebase:deploy:firestore
+```

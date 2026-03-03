@@ -8,9 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "firebase:deploy": "firebase deploy --config src/firebase/firebase.json",
-    "firebase:deploy:hosting": "firebase deploy --only hosting --config src/firebase/firebase.json",
-    "firebase:deploy:firestore": "firebase deploy --only firestore --config src/firebase/firebase.json"
+    "firebase:deploy": "firebase deploy",
+    "firebase:deploy:hosting": "firebase deploy --only hosting",
+    "firebase:deploy:firestore": "firebase deploy --only firestore"
   },
   "dependencies": {
     "firebase": "^10.12.0",
