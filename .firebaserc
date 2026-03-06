@@ -9,6 +9,14 @@
           "art-synt-13037"
         ]
       }
+    },
+    "art-syntex": {
+      "hosting": {
+        "production": [
+          "art-syntex"
+        ]
+      }
     }
-  }
+  },
+  "etags": {}
 }
