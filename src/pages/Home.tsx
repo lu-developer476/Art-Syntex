@@ -5,6 +5,7 @@ import { auth, db } from '../firebase/config'
 import { createPurchaseOrder, registerCustomerAccount } from '../firebase/commerce'
 import { getOrSeedProducts } from '../firebase/products'
 import type { Product } from '../data/products'
+import HeroSection from '../sections/Hero'
 
 interface CartItem {
   product: Product
@@ -16,7 +17,9 @@ const formatPrice = (price: number) =>
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
-  }).format(price)
+  })
+    .format(price)
+    .replace('US$', '€$')
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([])
@@ -77,7 +80,7 @@ export default function Home() {
     setAuthMessage(null)
     try {
       const credential = await signInWithEmailAndPassword(auth, authEmail, authPassword)
-      await addNotification('Ingreso exitoso', 'Usuario autenticado en Art-Synt', {
+      await addNotification('Ingreso exitoso', 'Usuario autenticado en Art-Syntex', {
         email: credential.user.email ?? authEmail,
       })
       setAuthMessage('Ingreso correcto. Tu sesión quedó activa en Firebase Auth.')
@@ -93,8 +96,8 @@ export default function Home() {
       await addDoc(collection(db, 'mail'), {
         to: [credential.user.email],
         message: {
-          subject: 'Bienvenido a Art-Synt',
-          text: 'Tu cuenta fue creada correctamente en Art-Synt. Ya podés comprar cyberware.',
+          subject: 'Bienvenido a Art-Syntex',
+          text: 'Tu cuenta fue creada correctamente en Art-Syntex. Ya podés comprar cyberware.',
         },
       })
       await addNotification('Registro completado', 'Nuevo usuario registrado para comprar', {
@@ -131,7 +134,7 @@ export default function Home() {
     await createPurchaseOrder(db, user.uid, user.email, cart)
 
     await addNotification('Compra en revisión', 'Carrito enviado para confirmación de compra', {
-      email: user.email ?? 'sin-email',
+      email: user.email,
       total: String(cartTotal),
     })
 
@@ -154,51 +157,40 @@ export default function Home() {
       await addDoc(collection(db, 'mail'), {
         to: [contactEmail],
         message: {
-          subject: 'Recibimos tu sugerencia en Art-Synt',
-          text: `Hola ${contactName}, recibimos tu mensaje: "${contactDescription}"`,
+          subject: 'Postulación recibida en Art-Syntex',
+          text: `Hola ${contactName}, recibimos tu perfil para operaciones en Night City: "${contactDescription}"`,
         },
       })
 
-      await addNotification('Nuevo contacto', 'Se recibió una sugerencia para la tienda', {
+      await addNotification('Nueva postulación', 'Se recibió una solicitud para unirse a Art-Syntex', {
         email: contactEmail,
       })
 
       setContactName('')
       setContactEmail('')
       setContactDescription('')
-      setContactMessage('Gracias por tu sugerencia. Firebase generó la notificación de correo.')
+      setContactMessage('Tu postulación fue enviada. Nuestro equipo de reclutamiento te contactará.')
     } catch {
-      setContactMessage('No pudimos enviar la sugerencia. Verificá la configuración de Firebase.')
+      setContactMessage('No pudimos enviar la postulación. Verificá la configuración de Firebase.')
     }
   }
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 pb-16">
-      <section className="rounded-3xl border border-purple-300 bg-purple-50 p-8 shadow-md">
-        <img src="/logo.svg" alt="Logo de Art-Synt" className="h-14 w-14" />
-        <p className="mt-4 text-sm uppercase tracking-[0.25em] text-purple-700">Art-Synt</p>
-        <h1 className="mt-3 text-4xl font-bold text-purple-900 md:text-6xl">
-          Bienvenido a Art-Synt: implantes de élite para sobrevivir Night City
-        </h1>
-        <p className="mt-4 max-w-3xl text-base text-purple-700 md:text-lg">
-          En 2077, Art-Synt es una corporación independiente que diseña cyberware premium para
-          mercenarios, netrunners y operadores de alto riesgo. Nuestro catálogo combina implantes
-          experimentales, soporte táctico y estética urbana inspirada en los distritos más hostiles
-          de Night City.
-        </p>
+      <HeroSection />
 
-        <div className="mt-8 grid gap-4 md:grid-cols-3">
-          <InfoCard label="Productos" value={products.length || 10} />
-          <InfoCard label="Destacados" value={featuredCount || 3} />
-          <InfoCard label="Estado" value={loading ? 'Sincronizando' : 'Online'} />
-        </div>
+      <section className="grid gap-4 md:grid-cols-3">
+        <InfoCard label="Productos" value={products.length || 10} />
+        <InfoCard label="Destacados" value={featuredCount || 3} />
+        <InfoCard label="Estado" value={loading ? 'Sincronizando' : 'Online'} />
       </section>
 
-      <section className="grid gap-6 rounded-3xl border border-purple-200 bg-white p-6 md:grid-cols-2">
+      <section id="acceso" className="grid scroll-mt-24 gap-6 rounded-3xl border border-purple-200 bg-gradient-to-br from-white via-purple-50 to-slate-100 p-6 md:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-semibold text-purple-900">Acceso de clientes</h2>
+          <h2 className="text-2xl font-semibold text-purple-900">Acceso</h2>
           <p className="mt-2 text-sm text-purple-700">
-            Ingresá con correo y contraseña de Firebase Auth o registrate para empezar a comprar.
+            Iniciá sesión para operar la tienda y autorizar compras de implantes con tu identidad
+            validada en la red de Art-Syntex.
           </p>
           {user ? (
             <div className="mt-4 space-y-3 rounded-xl bg-purple-50 p-4">
@@ -258,8 +250,18 @@ export default function Home() {
         <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">{error}</div>
       )}
 
-      <section className="space-y-5">
-        <h2 className="text-2xl font-semibold text-purple-900">Productos</h2>
+      <section id="productos" className="scroll-mt-24 space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-semibold text-purple-900">Productos</h2>
+            <p className="mt-1 text-sm text-purple-700">
+              Revisá el catálogo, agregá mejoras al carrito y comprobá tu vista previa antes de
+              confirmar la compra.
+            </p>
+          </div>
+          <p className="text-lg font-bold text-purple-900">Total del carrito: {formatPrice(cartTotal)}</p>
+        </div>
+
         {loading ? (
           <div className="grid gap-6 md:grid-cols-2">
             {Array.from({ length: 10 }).map((_, index) => (
@@ -294,13 +296,13 @@ export default function Home() {
                       className="rounded-lg border border-purple-400 px-3 py-2 text-sm text-purple-700 hover:bg-purple-100"
                       onClick={() => setSelectedProduct(product)}
                     >
-                      Detalles
+                      Vista previa
                     </button>
                     <button
                       className="rounded-lg bg-purple-700 px-3 py-2 text-sm text-white hover:bg-purple-800"
                       onClick={() => handleAddToCart(product)}
                     >
-                      Incorporar al carrito
+                      Agregar al carrito
                     </button>
                   </div>
                 </div>
@@ -308,70 +310,67 @@ export default function Home() {
             ))}
           </div>
         )}
-      </section>
 
-      {selectedProduct ? (
-        <section className="rounded-2xl border border-purple-300 bg-purple-50 p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="text-2xl font-semibold text-purple-900">{selectedProduct.name}</h3>
-              <p className="mt-2 text-purple-700">{selectedProduct.description}</p>
-              <p className="mt-3 text-lg font-bold text-purple-900">
-                Precio: {formatPrice(selectedProduct.price)}
-              </p>
-            </div>
-            <button
-              className="rounded-lg border border-purple-400 px-3 py-2 text-sm text-purple-700 hover:bg-purple-100"
-              onClick={() => setSelectedProduct(null)}
-            >
-              Cerrar detalle
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      <section className="rounded-3xl border border-purple-200 bg-white p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-purple-900">Carrito</h2>
-          <p className="text-lg font-bold text-purple-900">Total: {formatPrice(cartTotal)}</p>
-        </div>
-        {cart.length === 0 ? (
-          <p className="mt-4 text-sm text-purple-700">Todavía no agregaste productos al carrito.</p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {cart.map((item) => (
-              <li
-                key={item.product.id}
-                className="flex items-center justify-between rounded-lg border border-purple-200 px-4 py-3"
+        {selectedProduct ? (
+          <section className="rounded-2xl border border-purple-300 bg-purple-50 p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-2xl font-semibold text-purple-900">{selectedProduct.name}</h3>
+                <p className="mt-2 text-purple-700">{selectedProduct.description}</p>
+                <p className="mt-3 text-lg font-bold text-purple-900">
+                  Precio: {formatPrice(selectedProduct.price)}
+                </p>
+              </div>
+              <button
+                className="rounded-lg border border-purple-400 px-3 py-2 text-sm text-purple-700 hover:bg-purple-100"
+                onClick={() => setSelectedProduct(null)}
               >
-                <span className="text-sm text-purple-800">
-                  {item.product.name} x {item.quantity}
-                </span>
-                <span className="text-sm font-semibold text-purple-900">
-                  {formatPrice(item.product.price * item.quantity)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        <button
-          onClick={handleConfirmPurchase}
-          disabled={!user || cart.length === 0}
-          className="mt-5 rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-purple-300"
-        >
-          Confirmar compra
-        </button>
+                Cerrar vista previa
+              </button>
+            </div>
+          </section>
+        ) : null}
+
+        <section className="rounded-3xl border border-purple-200 bg-gradient-to-br from-white via-purple-50 to-slate-100 p-6">
+          <h3 className="text-xl font-semibold text-purple-900">Vista previa de compra</h3>
+          {cart.length === 0 ? (
+            <p className="mt-4 text-sm text-purple-700">Todavía no agregaste productos al carrito.</p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {cart.map((item) => (
+                <li
+                  key={item.product.id}
+                  className="flex items-center justify-between rounded-lg border border-purple-200 px-4 py-3"
+                >
+                  <span className="text-sm text-purple-800">
+                    {item.product.name} x {item.quantity}
+                  </span>
+                  <span className="text-sm font-semibold text-purple-900">
+                    {formatPrice(item.product.price * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            onClick={handleConfirmPurchase}
+            disabled={!user || cart.length === 0}
+            className="mt-5 rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-purple-300"
+          >
+            Confirmar compra
+          </button>
+        </section>
       </section>
 
-      <section className="rounded-3xl border border-purple-200 bg-white p-6">
+      <section id="contacto" className="scroll-mt-24 rounded-3xl border border-purple-200 bg-gradient-to-br from-white via-purple-50 to-slate-100 p-6">
         <h2 className="text-2xl font-semibold text-purple-900">Contacto</h2>
         <p className="mt-2 text-sm text-purple-700">
-          Enviá sugerencias sobre la tienda. Guardamos tu mensaje y disparamos un correo desde
-          Firebase (colección mail) si está configurada la extensión de Email Trigger.
+          ¿Querés formar parte de Art-Syntex? Buscamos talentos para desarrollo de implantes,
+          operaciones de campo y seguridad corporativa en los distritos de Night City.
         </p>
         <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleContactSubmit}>
           <label className="text-sm text-purple-800">
-            Nombre y apellido
+            Nombre o alias operativo
             <input
               value={contactName}
               onChange={(event) => setContactName(event.target.value)}
@@ -380,7 +379,7 @@ export default function Home() {
             />
           </label>
           <label className="text-sm text-purple-800">
-            Correo
+            Correo de contacto
             <input
               type="email"
               value={contactEmail}
@@ -390,7 +389,7 @@ export default function Home() {
             />
           </label>
           <label className="text-sm text-purple-800 md:col-span-2">
-            Descripción de sugerencias
+            Contanos tu especialidad y experiencia en Night City
             <textarea
               value={contactDescription}
               onChange={(event) => setContactDescription(event.target.value)}
@@ -403,7 +402,7 @@ export default function Home() {
             type="submit"
             className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800 md:w-fit"
           >
-            Enviar sugerencia
+            Enviar postulación
           </button>
         </form>
         {contactMessage ? <p className="mt-3 text-sm text-purple-700">{contactMessage}</p> : null}
@@ -414,7 +413,7 @@ export default function Home() {
 
 function InfoCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-purple-200 bg-white p-4">
+    <div className="animate-pulse-glow rounded-xl border border-purple-200 bg-gradient-to-br from-white via-purple-50 to-slate-100 p-4">
       <p className="text-xs uppercase tracking-[0.2em] text-purple-500">{label}</p>
       <p className="mt-2 text-2xl font-bold text-purple-800">{value}</p>
     </div>

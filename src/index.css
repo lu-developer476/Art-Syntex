@@ -1,15 +1,139 @@
+@import url('https://fonts.cdnfonts.com/css/ds-digital');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: Consolas, monospace;
-  background: #ffffff;
+  font-family: 'DS-Digital', monospace;
+  background: linear-gradient(145deg, #f5f3ff 0%, #ffffff 45%, #d1d5db 100%);
   color: #4c1d95;
 }
 
 * {
   box-sizing: border-box;
+  font-family: inherit;
+}
+
+.text-cyber-gold {
+  color: #f5c542;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(124, 58, 237, 0.18);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(156, 163, 175, 0.3);
+  }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3.5s ease-in-out infinite;
+}
+
+/* 1) Mobile: hasta 576px */
+@media (max-width: 576px) {
+  body {
+    font-size: 15px;
+  }
+
+  h1 {
+    line-height: 1.15;
+  }
+
+  section {
+    border-radius: 1rem !important;
+    padding: 1rem !important;
+  }
+
+  nav[aria-label='Navegación interna'] {
+    gap: 0.5rem;
+  }
+
+  nav[aria-label='Navegación interna'] a {
+    width: 100%;
+    text-align: center;
+  }
+
+  input,
+  textarea,
+  button {
+    font-size: 0.95rem;
+  }
+
+  footer {
+    line-height: 1.4;
+  }
+}
+
+/* 2) Tablet: 577px - 768px */
+@media (min-width: 577px) and (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+
+  section {
+    padding: 1.25rem !important;
+  }
+
+  nav[aria-label='Navegación interna'] a {
+    min-width: 140px;
+    text-align: center;
+  }
+
+  footer {
+    line-height: 1.5;
+  }
+}
+
+/* 3) Laptop: 769px - 1200px */
+@media (min-width: 769px) and (max-width: 1200px) {
+  body {
+    font-size: 17px;
+  }
+
+  section {
+    padding: 1.5rem !important;
+  }
+
+  nav[aria-label='Navegación interna'] a {
+    min-width: 150px;
+  }
+}
+
+/* 4) Desktop / TV: 1201px+ */
+@media (min-width: 1201px) {
+  body {
+    font-size: 18px;
+  }
+
+  section {
+    padding: 2rem !important;
+  }
+
+  footer {
+    font-size: 1rem !important;
+  }
 }
