@@ -24,7 +24,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
         <details className="group relative">
           <summary className="cursor-pointer list-none rounded-lg border border-purple-300/60 bg-purple-900/60 px-4 py-2 text-sm font-semibold text-purple-100 hover:bg-purple-800/70">
-            Menú
+            ➕
           </summary>
           <nav className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-purple-400/50 bg-black/90 p-2 shadow-xl">
             {menuItems.map((item) => (

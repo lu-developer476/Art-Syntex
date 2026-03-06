@@ -1,10 +1,11 @@
 import { Routes, Route } from 'react-router-dom'
 import Container from './components/Container'
 import MainLayout from './layout/Main'
-import Access from './pages/Access'
-import Contact from './pages/Contact'
-import Home from './pages/Home'
-import Products from './pages/Products'
+import Home, { type SectionKey } from './pages/Home'
+
+function SectionRoute({ section }: { section: SectionKey }) {
+  return <Home focusSection={section} />
+}
 
 export default function App() {
   return (
@@ -12,9 +13,9 @@ export default function App() {
       <Container>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/acceso" element={<Access />} />
-          <Route path="/productos" element={<Products />} />
-          <Route path="/contacto" element={<Contact />} />
+          <Route path="/acceso" element={<SectionRoute section="acceso" />} />
+          <Route path="/productos" element={<SectionRoute section="productos" />} />
+          <Route path="/contacto" element={<SectionRoute section="contacto" />} />
         </Routes>
       </Container>
     </MainLayout>
