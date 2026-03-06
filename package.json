@@ -4,18 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc && vite build",
     "dev": "vite",
-codex/find-config.ts-setup-options-hu10ak
-    "firebase:deploy": "npx firebase-tools deploy --project art-synt-13037",
-    "firebase:deploy:firestore": "npx firebase-tools deploy --only firestore --project art-synt-13037",
-    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting:production --project art-synt-13037",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "server": "node server/index.js",
     "firebase:deploy": "npx firebase-tools deploy",
     "firebase:deploy:firestore": "npx firebase-tools deploy --only firestore",
-    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting",
-main
-    "preview": "vite preview",
-    "server": "node server/index.js"
+    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -37,3 +32,4 @@ main
     "vite": "^5.2.0"
   }
 }
+EOF
