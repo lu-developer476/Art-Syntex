@@ -58,7 +58,7 @@ export default function Home({ focusSection }: HomeProps) {
         const items = await getOrSeedProducts()
         setProducts(items)
       } catch {
-        setError('No pudimos conectar con Firebase. Revisá tus variables VITE_FIREBASE_*')
+        setError('No pudimos conectarte a nuestra red. Revisa tus credenciales.')
       } finally {
         setLoading(false)
       }
@@ -99,7 +99,7 @@ export default function Home({ focusSection }: HomeProps) {
     setAuthMessage(null)
 
     if (!authEmail || !authPassword) {
-      setAuthMessage('Ingresá correo y contraseña para autenticarte.')
+      setAuthMessage('ID y clave requeridos.')
       return
     }
 
@@ -108,14 +108,14 @@ export default function Home({ focusSection }: HomeProps) {
       await addNotification('Ingreso exitoso', 'Usuario autenticado en la red', {
         email: credential.user.email ?? authEmail,
       })
-      setAuthMessage('Ingreso correcto. Tu sesión quedó activa en Firebase Auth.')
+      setAuthMessage('Sesión identificada en la base de datos.')
     } catch (error) {
       if (error instanceof FirebaseError && error.code === 'auth/invalid-credential') {
-        setAuthMessage('Credenciales inválidas. Verificá correo y contraseña.')
+        setAuthMessage('Credenciales incorrectas. Verificar.')
         return
       }
 
-      setAuthMessage('No se pudo ingresar. Revisá la configuración de Authentication en Firebase.')
+      setAuthMessage('Error de ingreso')
     }
   }
 
@@ -123,7 +123,7 @@ export default function Home({ focusSection }: HomeProps) {
     setAuthMessage(null)
 
     if (!authEmail.includes('@') || authPassword.length < 6) {
-      setAuthMessage('Usá un correo válido y una contraseña de al menos 6 caracteres.')
+      setAuthMessage('Las credenciales son personales. Por favor, resguardalas.')
       return
     }
 
@@ -133,20 +133,20 @@ export default function Home({ focusSection }: HomeProps) {
         to: [credential.user.email],
         message: {
           subject: 'Bienvenido a la red',
-          text: 'Tu cuenta fue creada correctamente. Ya podés comprar cyberware.',
+          text: 'Tu cuenta fue creada correctamente. Estás habilitado para comprar nuestros productos.',
         },
       })
       await addNotification('Registro completado', 'Nuevo usuario registrado para comprar', {
         email: credential.user.email ?? authEmail,
       })
-      setAuthMessage('Registro exitoso. Authentication y perfil de cliente quedaron operativos.')
+      setAuthMessage('Registro exitoso. Perfil del cliente operativo.')
     } catch (error) {
       if (error instanceof FirebaseError && error.code === 'auth/email-already-in-use') {
-        setAuthMessage('Ese correo ya está registrado. Probá iniciar sesión.')
+        setAuthMessage('El ID ya está registrado. Se requieren identificadores diferentes.')
         return
       }
 
-      setAuthMessage('No se pudo registrar. Revisá Authentication/Firestore en Firebase.')
+      setAuthMessage('No se pudo registrar. Revisa tus credenciales.')
     }
   }
 
@@ -164,27 +164,27 @@ export default function Home({ focusSection }: HomeProps) {
 
   const handleConfirmPurchase = async () => {
     if (!user || cart.length === 0) {
-      setAuthMessage('Necesitás sesión activa y productos en el carrito para confirmar la compra.')
+      setAuthMessage('El derecho a comprar está restringido a nuestros usuarios. Por favor, registrate para operar en nuestro sitio.')
       return
     }
 
     if (!user.email) {
-      setAuthMessage('No pudimos confirmar la compra porque tu cuenta no tiene correo válido.')
+      setAuthMessage('No pudimos confirmar la compra porque no hay registros en nuestra red.')
       return
     }
 
     try {
       await createPurchaseOrder(db, user.uid, user.email, cart)
 
-      await addNotification('Compra en revisión', 'Carrito enviado para confirmación de compra', {
+      await addNotification('Producto en espera', 'Carrito enviado para aceptación de compra', {
         email: user.email,
         total: String(cartTotal),
       })
 
       setCart([])
-      setAuthMessage('Compra preconfirmada: Firestore creó tu orden en purchaseOrders.')
+      setAuthMessage('Compra preconfirmada: Orden generada.')
     } catch {
-      setAuthMessage('No pudimos guardar la orden. Revisá permisos de Firestore (rules).')
+      setAuthMessage('No pudimos guardar la orden. Vuelve a intentarlo en unos minutos.')
     }
   }
 
@@ -208,7 +208,7 @@ export default function Home({ focusSection }: HomeProps) {
       await addDoc(collection(db, 'mail'), {
         to: [contactEmail],
         message: {
-          subject: 'Postulación recibida en la red',
+          subject: 'Postulación recibida en nuestros sistemas',
           text: `Hola ${contactName}, recibimos tu perfil para operaciones en Night City: "${contactDescription}"`,
         },
       })
@@ -220,9 +220,9 @@ export default function Home({ focusSection }: HomeProps) {
       setContactName('')
       setContactEmail('')
       setContactDescription('')
-      setContactMessage('Postulación enviada con éxito a Firestore. Reclutamiento te contactará.')
+      setContactMessage('Postulación enviada con éxito. El personal encargado te contactará pronto.')
     } catch {
-      setContactMessage('No pudimos enviar la postulación. Verificá Firestore Database y sus reglas.')
+      setContactMessage('Fallo en la red. Vuelve a intentarlo en unos minutos.')
     }
   }
 
@@ -349,7 +349,7 @@ export default function Home({ focusSection }: HomeProps) {
                       className="rounded-lg border border-purple-300 px-3 py-2 text-sm text-purple-100 hover:bg-purple-800/40"
                       onClick={() => setSelectedProduct(product)}
                     >
-                      Detalles
+                      Vista previa
                     </button>
                     <button
                       className="rounded-lg bg-purple-700 px-3 py-2 text-sm text-white hover:bg-purple-800"
@@ -422,7 +422,7 @@ export default function Home({ focusSection }: HomeProps) {
       >
         <h2 className="text-2xl font-semibold text-purple-100">Contacto</h2>
         <p className="mt-2 text-sm text-purple-200">
-          ¿Querés formar parte de nuestra red? Buscamos talentos para desarrollo de implantes,
+          ¿Querés formar parte de nuestra empresa? Buscamos talentos para desarrollo de implantes y cyberware,
           operaciones de campo y seguridad corporativa en los distritos de Night City.
         </p>
         <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleContactSubmit}>
@@ -436,7 +436,7 @@ export default function Home({ focusSection }: HomeProps) {
             />
           </label>
           <label className="text-sm text-purple-100">
-            e-mail de contacto
+            ID de contacto
             <input
               type="email"
               value={contactEmail}
@@ -446,7 +446,7 @@ export default function Home({ focusSection }: HomeProps) {
             />
           </label>
           <label className="text-sm text-purple-100 md:col-span-2">
-            Contanos tu especialidad y experiencia en Night City
+            Contanos tu especialidad y experiencias previas
             <textarea
               value={contactDescription}
               onChange={(event) => setContactDescription(event.target.value)}
