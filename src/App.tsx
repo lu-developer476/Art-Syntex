@@ -1,12 +1,22 @@
 import { Routes, Route } from 'react-router-dom'
+import Container from './components/Container'
+import MainLayout from './layout/Main'
+import Access from './pages/Access'
+import Contact from './pages/Contact'
 import Home from './pages/Home'
+import Products from './pages/Products'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-white px-4 py-8 text-purple-900 md:px-10">
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
-    </div>
+    <MainLayout>
+      <Container>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/acceso" element={<Access />} />
+          <Route path="/productos" element={<Products />} />
+          <Route path="/contacto" element={<Contact />} />
+        </Routes>
+      </Container>
+    </MainLayout>
   )
 }

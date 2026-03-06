@@ -20,7 +20,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'disk-ram',
-    name: 'Disk RAM Overclocked',
+    name: 'Ex-Disk + mejora de RAM',
     price: 850,
     image: '/images/disk-ram.png',
     description: 'Expansión de memoria neuronal para ejecutar más quickhacks sin latencia.',
@@ -28,7 +28,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'mantis-blades',
-    name: 'Mantis Blades V2',
+    name: 'Garras Mantis',
     price: 2600,
     image: '/images/mantis-blades.png',
     description: 'Cuchillas retráctiles de titanio con sistema de estabilización giroscópica.',
@@ -37,7 +37,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'gorilla-arms',
-    name: 'Gorilla Arms Prime',
+    name: 'Brazos gorila',
     price: 2400,
     image: '/images/gorilla-arms.png',
     description: 'Aumenta tu fuerza física para combate cuerpo a cuerpo y tareas de alto impacto.',
@@ -45,7 +45,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'facial-cyberware',
-    name: 'Facial Cyberware Suite',
+    name: 'Cyberware facial',
     price: 1490,
     image: '/images/facial-cyberware.png',
     description: 'Reemplazo facial modular con protección balística y expresividad digital.',
@@ -53,7 +53,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'synaptic-reflector',
-    name: 'Synaptic Reflector',
+    name: 'Acelerador sináptico + sintonizador de reflejos',
     price: 1750,
     image: '/images/synaptic-reflector.png',
     description: 'Refuerzo sináptico que reduce el tiempo de reacción ante amenazas cercanas.',
@@ -61,7 +61,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'projectile-ls',
-    name: 'Projectile Launch System',
+    name: 'Sistema de lanzamiento de proyectiles',
     price: 2800,
     image: '/images/proyectile-ls.png',
     description: 'Lanzador de proyectiles integrado en brazo con control de trayectoria inteligente.',
@@ -69,7 +69,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'kiroshi-optics',
-    name: 'Kiroshi Optics XR',
+    name: 'Ópticas Kiroshi oráculo',
     price: 1320,
     image: '/images/kiroshi-optics.png',
     description: 'Visión aumentada con zoom táctico, escaneo térmico y mejora de contraste.',
@@ -78,7 +78,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'atomic-sensors',
-    name: 'Atomic Sensors Pack',
+    name: 'Sensores atómicos',
     price: 1190,
     image: '/images/atomic-sensors.png',
     description: 'Sensores de entorno para detección de bioseñales, ruido y anomalías químicas.',
@@ -86,7 +86,7 @@ export const productsSeed: Product[] = [
   },
   {
     id: 'visual-interface',
-    name: 'Visual Interface Link',
+    name: 'Soporte de corteza visual',
     price: 990,
     image: '/images/visual-interface.png',
     description: 'Conecta HUD y comunicaciones en tiempo real con tus implantes principales.',
