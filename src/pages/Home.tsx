@@ -1,19 +1,21 @@
 import HeroSection from '../sections/Hero'
 import { useCart } from '../hooks/useCart'
 import { useProducts } from '../hooks/useProducts'
+import { useI18n } from '../i18n'
 
 export default function Home() {
   const products = useProducts()
   const cart = useCart()
+  const { t } = useI18n()
 
   return (
     <div className="mx-auto max-w-6xl space-y-12 pb-16">
       <HeroSection />
 
       <section className="grid gap-4 md:grid-cols-3">
-        <InfoCard label="Productos" value={products.products.length || 10} />
-        <InfoCard label="Mejoras en carrito" value={cart.cart.length} />
-        <InfoCard label="Estado" value={products.loading ? 'Sincronizando' : 'Activo'} />
+        <InfoCard label={t('statProducts')} value={products.products.length || 10} />
+        <InfoCard label={t('statCart')} value={cart.cart.length} />
+        <InfoCard label={t('statStatus')} value={products.loading ? t('statSync') : t('statActive')} />
       </section>
     </div>
   )

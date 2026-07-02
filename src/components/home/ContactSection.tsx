@@ -1,4 +1,5 @@
 import type { FormEvent } from 'react'
+import { useI18n } from '../../i18n'
 
 interface ContactSectionProps {
   contactDescription: string
@@ -23,18 +24,19 @@ export default function ContactSection({
   onNameChange,
   onSubmit,
 }: ContactSectionProps) {
+  const { t } = useI18n()
   return (
     <section className="rounded-3xl border border-purple-400/50 bg-gradient-to-br from-purple-950/80 via-black/70 to-slate-900/70 p-6">
-      <h2 className="text-2xl font-semibold text-purple-100">Contacto</h2>
+      <h2 className="text-2xl font-semibold text-purple-100">{t('contactTitle')}</h2>
       <p className="mt-2 text-sm text-purple-200">
-        ¿Buscando se parte de nuestra red? Necesitamos talentos para desarrollo de implantes, operaciones de campo y seguridad corporativa en los distritos de Night City.
+        {t('contactDescription')}
       </p>
       <div className="mt-4 rounded-2xl border border-cyan-400/30 bg-cyan-950/20 p-4 text-sm text-cyan-100">
-        Tu solicitud es remitida por Nodemailer: notifica al equipo y te devuelve una respuesta automatizada a tu correo registrado.
+        {t('contactNote')}
       </div>
       <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={(event) => void onSubmit(event)}>
         <label className="text-sm text-purple-100">
-          Nombre o alias operativo
+          {t('nameAlias')}
           <input
             value={contactName}
             onChange={(event) => onNameChange(event.target.value)}
@@ -43,7 +45,7 @@ export default function ContactSection({
           />
         </label>
         <label className="text-sm text-purple-100">
-          Correo de contacto
+          {t('contactEmail')}
           <input
             type="email"
             value={contactEmail}
@@ -53,7 +55,7 @@ export default function ContactSection({
           />
         </label>
         <label className="text-sm text-purple-100 md:col-span-2">
-          Contanos tu especialidad y experiencia previa
+          {t('experience')}
           <textarea
             value={contactDescription}
             onChange={(event) => onDescriptionChange(event.target.value)}
@@ -68,7 +70,7 @@ export default function ContactSection({
           disabled={isSubmitting}
           className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60 md:w-fit"
         >
-          {isSubmitting ? 'Enviando...' : 'Postular'}
+          {isSubmitting ? t('sending') : t('apply')}
         </button>
       </form>
       {contactMessage ? <p className="mt-3 text-sm text-purple-200">{contactMessage}</p> : null}

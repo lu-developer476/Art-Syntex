@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react'
 import type { User } from 'firebase/auth'
+import { useI18n } from '../../i18n'
 
 interface AccessSectionProps {
   authEmail: string
@@ -32,33 +33,34 @@ export default function AccessSection({
   user,
   verificationCenterUrl,
 }: AccessSectionProps) {
+  const { t } = useI18n()
   return (
     <>
       <section className="grid gap-6 rounded-3xl border border-purple-400/50 bg-gradient-to-br from-purple-950/80 via-black/70 to-slate-900/70 p-6 md:grid-cols-2">
         <div>
-          <h2 className="text-2xl font-semibold text-purple-100">Acceso</h2>
+          <h2 className="text-2xl font-semibold text-purple-100">{t('accessTitle')}</h2>
           <p className="mt-2 text-sm text-purple-200">
-            Se debe validar tu identidad para operar en la red. Solo las cuentas con correo verificado pueden ingresar.
+            {t('accessDescription')}
           </p>
           <div className="mt-4 rounded-2xl border border-cyan-400/30 bg-cyan-950/20 p-4 text-sm text-cyan-100">
-            <p className="font-semibold uppercase tracking-[0.2em] text-cyan-300">Flujo recomendado</p>
+            <p className="font-semibold uppercase tracking-[0.2em] text-cyan-300">{t('recommendedFlow')}</p>
             <ol className="mt-3 list-decimal space-y-2 pl-5 text-purple-100/90">
-              <li>Registrate con tu correo operativo.</li>
-              <li>Se ha notificado a su bandeja de entrada.</li>
-              <li>Por favor, debe abrir el enlace seguro y verificar los datos.</li>
+              <li>{t('accessStep1')}</li>
+              <li>{t('accessStep2')}</li>
+              <li>{t('accessStep3')}</li>
             </ol>
           </div>
           {user ? (
             <div className="mt-4 space-y-3 rounded-xl bg-purple-900/40 p-4">
-              <p className="text-sm text-purple-100">Sesión activa: {user.email}</p>
+              <p className="text-sm text-purple-100">{t('activeSession')}: {user.email}</p>
               <p className="text-xs uppercase tracking-[0.2em] text-cyan-300">
-                Estado: {user.emailVerified ? 'correo validado' : 'pendiente de validación'}
+                {t('status')}: {user.emailVerified ? t('emailVerified') : t('emailPending')}
               </p>
               <button
                 onClick={() => void onSignOut()}
                 className="rounded-lg border border-purple-300 px-3 py-2 text-sm text-purple-100 hover:bg-purple-800/50"
               >
-                Cerrar sesión
+                {t('signOut')}
               </button>
             </div>
           ) : null}
@@ -67,7 +69,7 @@ export default function AccessSection({
 
         <form className="space-y-3" onSubmit={(event) => void onSignIn(event)}>
           <label className="block text-sm text-purple-100">
-            Correo
+            {t('email')}
             <input
               type="email"
               value={authEmail}
@@ -77,7 +79,7 @@ export default function AccessSection({
             />
           </label>
           <label className="block text-sm text-purple-100">
-            Clave
+            {t('password')}
             <input
               type="password"
               value={authPassword}
@@ -88,7 +90,7 @@ export default function AccessSection({
             />
           </label>
           <div className="rounded-2xl border border-purple-400/40 bg-black/20 p-4 text-xs leading-6 text-purple-200">
-            Luego del alta enviaremos un correo de Nodemailer con el enlace seguro gestionado por Firebase.
+            {t('authNote')}
           </div>
           <div className="flex flex-wrap gap-3">
             <button
@@ -96,7 +98,7 @@ export default function AccessSection({
               disabled={isAuthLoading}
               className="rounded-lg bg-purple-700 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isAuthLoading ? 'Procesando...' : 'Ingresar'}
+              {isAuthLoading ? t('processing') : t('signIn')}
             </button>
             <button
               type="button"
@@ -104,13 +106,13 @@ export default function AccessSection({
               onClick={() => void onSignUp()}
               className="rounded-lg border border-purple-400 px-4 py-2 text-sm text-purple-100 hover:bg-purple-900/40 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Registrarse
+              {t('signUp')}
             </button>
             <a
               href={verificationCenterUrl}
               className="rounded-lg border border-cyan-400/60 px-4 py-2 text-sm text-cyan-100 transition hover:bg-cyan-900/30"
             >
-              Red
+              {t('network')}
             </a>
           </div>
         </form>
@@ -119,13 +121,13 @@ export default function AccessSection({
       {isRegisterModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
           <div className="w-full max-w-lg rounded-3xl border border-cyan-400/50 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 p-6 shadow-[0_0_45px_rgba(34,211,238,0.18)]">
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">Cuenta creada</p>
-            <h3 className="mt-3 text-2xl font-semibold text-white">Verifica el correo electrónico registrado</h3>
+            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">{t('accountCreated')}</p>
+            <h3 className="mt-3 text-2xl font-semibold text-white">{t('verifyEmailTitle')}</h3>
             <p className="mt-3 text-sm leading-6 text-purple-100">
-              Ya enviamos el correo seguro. El enlace recibido es para habilitar la cuenta y seguir el estado de compra desde nuestra red.
+              {t('verifyEmailCopy')}
             </p>
             <div className="mt-5 rounded-2xl border border-purple-400/40 bg-black/30 p-4 text-sm text-purple-100">
-              <p className="font-semibold text-cyan-300">Siguiente paso</p>
+              <p className="font-semibold text-cyan-300">{t('nextStep')}</p>
               <p className="mt-2 break-all">{verificationCenterUrl}</p>
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
@@ -133,14 +135,14 @@ export default function AccessSection({
                 href={verificationCenterUrl}
                 className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400"
               >
-                Abrir red
+                {t('openNetwork')}
               </a>
               <button
                 type="button"
                 onClick={onCloseRegisterModal}
                 className="rounded-lg border border-purple-300 px-4 py-2 text-sm text-purple-100 hover:bg-purple-900/40"
               >
-                Entendido
+                {t('understood')}
               </button>
             </div>
           </div>
