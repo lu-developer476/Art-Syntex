@@ -1,28 +1,28 @@
 import { ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { I18nProvider, translate, type Language, type TranslationKey } from '../i18n'
 
 interface MainLayoutProps {
   children: ReactNode
 }
 
-type Language = 'es' | 'en'
 type Theme = 'dark' | 'light'
 
 const menuItems = [
-  { to: '/', label: 'Inicio' },
-  { to: '/acceso', label: 'Acceso' },
-  { to: '/productos', label: 'Productos' },
-  { to: '/contacto', label: 'Contacto' },
+  { to: '/', labelKey: 'navHome' },
+  { to: '/acceso', labelKey: 'navAccess' },
+  { to: '/productos', labelKey: 'navProducts' },
+  { to: '/contacto', labelKey: 'navContact' },
+] as const
+
+const languageOptions: Array<{ value: Language; flag: string; ariaLabelKey: 'ariaSpanish' | 'ariaEnglish' }> = [
+  { value: 'es', flag: '🇪🇸', ariaLabelKey: 'ariaSpanish' },
+  { value: 'en', flag: '🇺🇸', ariaLabelKey: 'ariaEnglish' },
 ]
 
-const languageOptions: Array<{ value: Language; label: string; flag: string; ariaLabel: string }> = [
-  { value: 'es', label: 'ES', flag: '🇪🇸', ariaLabel: 'Seleccionar idioma español' },
-  { value: 'en', label: 'EN', flag: '🇺🇸', ariaLabel: 'Select English language' },
-]
-
-const themeOptions: Array<{ value: Theme; label: string; icon: string; ariaLabel: string }> = [
-  { value: 'dark', label: 'Oscuro', icon: '🌙', ariaLabel: 'Activar tema oscuro' },
-  { value: 'light', label: 'Claro', icon: '☀️', ariaLabel: 'Activar tema claro' },
+const themeOptions: Array<{ value: Theme; labelKey: 'themeDark' | 'themeLight'; icon: string; ariaLabelKey: 'ariaDark' | 'ariaLight' }> = [
+  { value: 'dark', labelKey: 'themeDark', icon: '🌙', ariaLabelKey: 'ariaDark' },
+  { value: 'light', labelKey: 'themeLight', icon: '☀️', ariaLabelKey: 'ariaLight' },
 ]
 
 const getStoredPreference = <T extends string>(key: string, fallback: T, allowedValues: readonly T[]) => {
@@ -46,6 +46,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const [theme, setTheme] = useState<Theme>(() =>
     getStoredPreference('as-nexus-theme', 'dark', ['dark', 'light'] as const),
   )
+  const t = (key: TranslationKey) => translate(language, key)
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -95,7 +96,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             <Link
               to="/"
               className="rounded-xl px-1 py-1 text-lg font-bold tracking-[0.18em] text-purple-100 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-black sm:text-xl"
-              aria-label="Ir al inicio de A/S Nexus"
+              aria-label={t('ariaHome')}
             >
               <span className="font-android text-cyber-gold">A/S</span>{' '}
               <span className="font-android text-purple-100">Nexus</span>
@@ -108,7 +109,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               aria-expanded={isMenuOpen}
               aria-controls={menuId}
               aria-haspopup="true"
-              aria-label={isMenuOpen ? 'Cerrar menú principal' : 'Abrir menú principal'}
+              aria-label={isMenuOpen ? t('ariaMenuClose') : t('ariaMenuOpen')}
               onClick={() => setIsMenuOpen((open) => !open)}
             >
               <span aria-hidden="true">{isMenuOpen ? '✕' : '☰'}</span>
@@ -116,7 +117,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-end">
-            <nav ref={navRef} className="contents" aria-label="Navegación principal">
+            <nav ref={navRef} className="contents" aria-label={t('ariaNav')}>
               <div
                 id={menuId}
                 className={[
@@ -143,7 +144,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                           aria-current={isActive ? 'page' : undefined}
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          {item.label}
+                          {t(item.labelKey)}
                         </Link>
                       </li>
                     )
@@ -152,8 +153,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </div>
             </nav>
 
-            <div className="flex flex-wrap items-center gap-2 lg:justify-end" aria-label="Preferencias de interfaz">
-              <div className="flex rounded-2xl border border-purple-400/50 bg-black/50 p-1 shadow-[0_0_20px_rgba(147,51,234,0.12)]" role="group" aria-label="Idioma">
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end" aria-label={t('ariaPrefs')}>
+              <div className="flex rounded-2xl border border-purple-400/50 bg-black/50 p-1 shadow-[0_0_20px_rgba(147,51,234,0.12)]" role="group" aria-label={t('ariaLang')}>
                 {languageOptions.map((option) => (
                   <button
                     key={option.value}
@@ -165,15 +166,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         : 'text-purple-100 hover:bg-purple-800/70 hover:text-white',
                     ].join(' ')}
                     aria-pressed={language === option.value}
-                    aria-label={option.ariaLabel}
+                    aria-label={t(option.ariaLabelKey)}
                     onClick={() => setLanguage(option.value)}
                   >
-                    <span aria-hidden="true">{option.flag}</span> {option.label}
+                    <span aria-hidden="true">{option.flag}</span>
                   </button>
                 ))}
               </div>
 
-              <div className="flex rounded-2xl border border-purple-400/50 bg-black/50 p-1 shadow-[0_0_20px_rgba(147,51,234,0.12)]" role="group" aria-label="Tema">
+              <div className="flex rounded-2xl border border-purple-400/50 bg-black/50 p-1 shadow-[0_0_20px_rgba(147,51,234,0.12)]" role="group" aria-label={t('ariaTheme')}>
                 {themeOptions.map((option) => (
                   <button
                     key={option.value}
@@ -185,10 +186,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
                         : 'text-purple-100 hover:bg-purple-800/70 hover:text-white',
                     ].join(' ')}
                     aria-pressed={theme === option.value}
-                    aria-label={option.ariaLabel}
+                    aria-label={t(option.ariaLabelKey)}
                     onClick={() => setTheme(option.value)}
                   >
-                    <span aria-hidden="true">{option.icon}</span> {option.label}
+                    <span aria-hidden="true">{option.icon}</span> {t(option.labelKey)}
                   </button>
                 ))}
               </div>
@@ -197,10 +198,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
         </div>
       </header>
 
-      <main className="flex-1">{children}</main>
+      <I18nProvider language={language}>
+        <main className="flex-1">{children}</main>
+      </I18nProvider>
 
       <footer className="mt-12 border-t border-purple-500/40 pt-6 text-center text-xs leading-relaxed tracking-wide text-purple-200 md:text-sm">
-        <span className="text-cyber-gold">©</span> {new Date().getFullYear()} Todos los derechos reservados • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
+        <span className="text-cyber-gold">©</span> {new Date().getFullYear()} {t('rights')} • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
       </footer>
     </div>
   )

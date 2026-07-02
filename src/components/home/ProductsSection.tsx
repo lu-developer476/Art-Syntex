@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Product } from '../../data/products'
 import { formatPrice } from '../../lib/home'
+import { useI18n } from '../../i18n'
 
 interface ProductsSectionProps {
   cartCount: number
@@ -25,6 +26,7 @@ export default function ProductsSection({
   products,
   selectedProduct,
 }: ProductsSectionProps) {
+  const { t } = useI18n()
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null)
 
   useEffect(() => {
@@ -53,9 +55,9 @@ export default function ProductsSection({
       <section className="space-y-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-purple-100">Productos</h2>
+            <h2 className="text-2xl font-semibold text-purple-100">{t('productsTitle')}</h2>
             <p className="mt-1 text-sm text-purple-200">
-              Nuevas mejoras y pedidos personalizados a tu alcance.
+              {t('productsSubtitle')}
             </p>
           </div>
           <button
@@ -63,7 +65,7 @@ export default function ProductsSection({
             className="rounded-full border border-purple-300/60 bg-purple-900/40 px-4 py-2 text-sm font-medium text-purple-100 transition hover:border-purple-200 hover:bg-purple-800/50"
             onClick={onOpenCart}
           >
-            Carrito · {cartCount} item{cartCount === 1 ? '' : 's'} · {formatPrice(cartTotal)}
+            {t('cart')} · {cartCount} {cartCount === 1 ? t('item') : t('items')} · {formatPrice(cartTotal)}
           </button>
         </div>
 
@@ -91,7 +93,7 @@ export default function ProductsSection({
                   type="button"
                   onClick={() => setPreviewProduct(product)}
                   className="relative block w-full overflow-hidden"
-                  aria-label={`Abrir imagen ampliada de ${product.name}`}
+                  aria-label={`${t('openImage')} ${product.name}`}
                 >
                   <img
                     src={product.image}
@@ -99,7 +101,7 @@ export default function ProductsSection({
                     className="h-48 w-full object-cover transition duration-500 group-hover:scale-105"
                   />
                   <span className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent px-4 py-3 text-left text-xs uppercase tracking-[0.3em] text-purple-100 opacity-0 transition group-hover:opacity-100">
-                    Click para ampliar
+                    {t('clickZoom')}
                   </span>
                 </button>
                 <div className="space-y-3 p-5">
@@ -116,21 +118,21 @@ export default function ProductsSection({
                       className="rounded-lg border border-purple-300 px-3 py-2 text-sm text-purple-100 transition hover:bg-purple-800/40"
                       onClick={() => onSelectProduct(selectedProduct?.id === product.id ? null : product)}
                     >
-                      {selectedProduct?.id === product.id ? 'Ocultar detalles' : 'Ver detalles'}
+                      {selectedProduct?.id === product.id ? t('hideDetails') : t('viewDetails')}
                     </button>
                     <button
                       type="button"
                       className="rounded-lg bg-purple-700 px-3 py-2 text-sm text-white transition hover:bg-purple-800"
                       onClick={() => handleAddToCart(product)}
                     >
-                      Agregar al carrito · Total: {formatPrice(cartTotal + product.price)}
+                      {t('addToCart')} · {t('total')}: {formatPrice(cartTotal + product.price)}
                     </button>
                   </div>
                   {selectedProduct?.id === product.id ? (
                     <div className="rounded-2xl border border-purple-300/40 bg-purple-950/40 p-4">
                       <p className="font-android text-sm leading-6 text-purple-200">{product.description}</p>
                       <p className="mt-3 text-sm font-semibold uppercase tracking-[0.2em] text-purple-300/80">
-                        Categoría: {product.category}
+                        {t('category')}: {product.category}
                       </p>
                     </div>
                   ) : null}
@@ -146,7 +148,7 @@ export default function ProductsSection({
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 px-4 py-8 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
-          aria-label={`Vista ampliada de ${previewProduct.name}`}
+          aria-label={`${t('expandedView')} ${previewProduct.name}`}
           onClick={() => setPreviewProduct(null)}
         >
           <div
@@ -158,7 +160,7 @@ export default function ProductsSection({
               onClick={() => setPreviewProduct(null)}
               className="absolute right-4 top-4 z-10 rounded-full border border-purple-300/40 bg-black/40 px-3 py-2 text-sm text-purple-100 transition hover:bg-purple-900/60"
             >
-              Cerrar
+              {t('close')}
             </button>
             <img
               src={previewProduct.image}
