@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import type { Product } from '../../data/products'
+import { useEffect, useMemo, useState } from 'react'
+import { productCategories, type Product, type ProductCategory } from '../../data/products'
 import { formatPrice } from '../../lib/home'
 import { useI18n } from '../../i18n'
 
@@ -28,6 +28,34 @@ export default function ProductsSection({
 }: ProductsSectionProps) {
   const { t } = useI18n()
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all')
+  const [sortOption, setSortOption] = useState<'featured' | 'price-asc' | 'price-desc' | 'name-asc'>('featured')
+
+  const filteredProducts = useMemo(() => {
+    const normalizedSearchTerm = searchTerm.trim().toLowerCase()
+
+    return products
+      .filter((product) => {
+        const matchesSearch = normalizedSearchTerm
+          ? [product.name, product.description, product.category].some((value) =>
+              value.toLowerCase().includes(normalizedSearchTerm),
+            )
+          : true
+        const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory
+
+        return matchesSearch && matchesCategory
+      })
+      .sort((firstProduct, secondProduct) => {
+        if (sortOption === 'price-asc') return firstProduct.price - secondProduct.price
+        if (sortOption === 'price-desc') return secondProduct.price - firstProduct.price
+        if (sortOption === 'name-asc') return firstProduct.name.localeCompare(secondProduct.name)
+
+        return Number(Boolean(secondProduct.featured)) - Number(Boolean(firstProduct.featured))
+      })
+  }, [products, searchTerm, selectedCategory, sortOption])
+
+  const hasActiveFilters = searchTerm.trim() !== '' || selectedCategory !== 'all' || sortOption !== 'featured'
 
   useEffect(() => {
     if (!previewProduct) {
@@ -69,6 +97,69 @@ export default function ProductsSection({
           </button>
         </div>
 
+        <div className="rounded-2xl border border-purple-300/40 bg-black/40 p-4 shadow-lg shadow-purple-950/20">
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr_auto]">
+            <label className="space-y-2 text-sm font-medium text-purple-100">
+              <span>{t('filterSearch')}</span>
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={t('filterSearchPlaceholder')}
+                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/40 px-4 py-3 text-purple-50 outline-none transition placeholder:text-purple-300/50 focus:border-cyan-300"
+              />
+            </label>
+
+            <label className="space-y-2 text-sm font-medium text-purple-100">
+              <span>{t('filterCategory')}</span>
+              <select
+                value={selectedCategory}
+                onChange={(event) => setSelectedCategory(event.target.value as ProductCategory | 'all')}
+                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/40 px-4 py-3 text-purple-50 outline-none transition focus:border-cyan-300"
+              >
+                <option value="all">{t('filterAllCategories')}</option>
+                {productCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="space-y-2 text-sm font-medium text-purple-100">
+              <span>{t('filterSort')}</span>
+              <select
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value as typeof sortOption)}
+                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/40 px-4 py-3 text-purple-50 outline-none transition focus:border-cyan-300"
+              >
+                <option value="featured">{t('sortFeatured')}</option>
+                <option value="price-asc">{t('sortPriceAsc')}</option>
+                <option value="price-desc">{t('sortPriceDesc')}</option>
+                <option value="name-asc">{t('sortNameAsc')}</option>
+              </select>
+            </label>
+
+            <div className="flex items-end">
+              <button
+                type="button"
+                disabled={!hasActiveFilters}
+                onClick={() => {
+                  setSearchTerm('')
+                  setSelectedCategory('all')
+                  setSortOption('featured')
+                }}
+                className="w-full rounded-xl border border-purple-300/50 px-4 py-3 text-sm font-semibold text-purple-100 transition hover:bg-purple-800/40 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                {t('clearFilters')}
+              </button>
+            </div>
+          </div>
+          <p className="mt-3 text-xs uppercase tracking-[0.25em] text-purple-300/80">
+            {filteredProducts.length} {filteredProducts.length === 1 ? t('productFound') : t('productsFound')}
+          </p>
+        </div>
+
         {error ? (
           <div className="rounded-2xl border border-red-400/60 bg-red-950/60 p-4 text-sm text-red-200">{error}</div>
         ) : null}
@@ -84,7 +175,7 @@ export default function ProductsSection({
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <article
                 key={product.id}
                 className="group overflow-hidden rounded-2xl border border-purple-300/50 bg-black/50 transition hover:-translate-y-1 hover:border-purple-300"
@@ -141,6 +232,13 @@ export default function ProductsSection({
             ))}
           </div>
         )}
+
+        {!loading && filteredProducts.length === 0 ? (
+          <div className="rounded-2xl border border-purple-300/40 bg-purple-950/30 p-6 text-center text-purple-100">
+            <p className="text-lg font-semibold">{t('noFilterResults')}</p>
+            <p className="mt-2 text-sm text-purple-200">{t('noFilterResultsHint')}</p>
+          </div>
+        ) : null}
       </section>
 
       {previewProduct ? (
