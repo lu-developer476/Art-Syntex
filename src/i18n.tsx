@@ -6,7 +6,7 @@ export type TranslationKey = keyof typeof translations.es
 
 const translations = {
   es: {
-    navHome: 'Inicio', navAccess: 'Acceso', navProducts: 'Productos', navContact: 'Contacto',
+    navHome: 'Inicio', navAccess: 'Acceso', navProducts: 'Productos', navContact: 'Contacto', menuLabel: 'Menú', menuPanelTitle: 'Tienda Nexus',
     ariaHome: 'Ir al inicio de A/S Nexus', ariaMenuOpen: 'Abrir menú principal', ariaMenuClose: 'Cerrar menú principal', ariaNav: 'Navegación principal', ariaPrefs: 'Preferencias de interfaz', ariaLang: 'Idioma', ariaTheme: 'Tema', ariaSpanish: 'Seleccionar idioma español', ariaEnglish: 'Seleccionar idioma inglés',
     themeDark: 'Oscuro', themeLight: 'Claro', ariaDark: 'Activar tema oscuro', ariaLight: 'Activar tema claro', rights: 'Todos los derechos reservados',
     heroTitle: 'La carne y el metal, entrelazados\nFortalece tus propias capacidades', heroQuote: '“Potenciamos lo humano con criterio y control”', heroDescription: 'Implantes calibrados y optimizados para tu ritmo, exigencia y la forma en que la ciudad obliga a superarte.',
@@ -17,7 +17,7 @@ const translations = {
     verifyOkEyebrow: 'Identidad validada', verifyOkTitle: 'Correo verificado correctamente.', verifyOkDescription: 'La identidad se encuentra confirmada. Regresa a Acceso e iniciá sesión para operar dentro de A/S Nexus.', verifyPendingEyebrow: 'Identidad pendiente de verificar acceso', verifyPendingTitle: 'Falta abrir el enlace seguro del correo.', verifyPendingDescription: 'Revisa la bandeja de entrada, spam o promociones del correo usado al registrarte para completar el estado final.', verifySteps: 'Pasos para el chequeo', verifyStep1: 'Un correo emitido por Firebase Authentication.', verifyStep2: 'Un correo adicional de A/S Nexus con Nodemailer para guiar el proceso.', verifyStep3: 'Un enlace seguro que valida tu cuenta y te devuelve a esta interfaz.', verifyNoteTitle: 'A tener en cuenta:', verifyNote: 'Si ya validaste el correo, regresa a Acceso y tu login queda habilitado. Si no lo hiciste, vuelve a ingresar a tu casilla de mail registrado con el enlace pendiente.', goAccess: 'Ir a Acceso',
   },
   en: {
-    navHome: 'Home', navAccess: 'Access', navProducts: 'Products', navContact: 'Contact',
+    navHome: 'Home', navAccess: 'Access', navProducts: 'Products', navContact: 'Contact', menuLabel: 'Menu', menuPanelTitle: 'Nexus Store',
     ariaHome: 'Go to A/S Nexus home', ariaMenuOpen: 'Open main menu', ariaMenuClose: 'Close main menu', ariaNav: 'Main navigation', ariaPrefs: 'Interface preferences', ariaLang: 'Language', ariaTheme: 'Theme', ariaSpanish: 'Select Spanish language', ariaEnglish: 'Select English language',
     themeDark: 'Dark', themeLight: 'Light', ariaDark: 'Enable dark theme', ariaLight: 'Enable light theme', rights: 'All rights reserved',
     heroTitle: 'Flesh and metal, intertwined\nStrengthen your own capabilities', heroQuote: '“We enhance humanity with judgment and control”', heroDescription: 'Calibrated implants optimized for your pace, demands, and the way the city forces you to evolve.',
