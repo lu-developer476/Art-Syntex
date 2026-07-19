@@ -21,7 +21,7 @@ const languageOptions: Array<{ value: Language; flag: string; ariaLabelKey: 'ari
 ]
 
 const themeOptions: Array<{ value: Theme; labelKey: 'themeDark' | 'themeLight'; icon: string; ariaLabelKey: 'ariaDark' | 'ariaLight' }> = [
-  { value: 'dark', labelKey: 'themeDark', icon: '🌙', ariaLabelKey: 'ariaDark' },
+  { value: 'dark', labelKey: 'themeDark', icon: '🌑', ariaLabelKey: 'ariaDark' },
   { value: 'light', labelKey: 'themeLight', icon: '☀️', ariaLabelKey: 'ariaLight' },
 ]
 
