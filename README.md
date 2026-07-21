@@ -25,14 +25,15 @@ Stack principal:
 - **Vite 7**
 - **React Router DOM 6**
 - **Tailwind CSS 3**
+- **Firebase SDK 10**
 
 Rutas expuestas por la aplicación:
 
-- `/`
-- `/acceso`
-- `/productos`
-- `/contacto`
-- `/verificar-email`
+- `/`: home/landing de A/S Nexus.
+- `/acceso`: registro, login, logout y estado de verificación.
+- `/productos`: catálogo, filtros, carrito y checkout.
+- `/contacto`: formulario de postulación/contacto.
+- `/verificar-email`: centro informativo para cuentas pendientes o verificadas.
 
 Capacidades implementadas:
 
@@ -47,6 +48,10 @@ Capacidades implementadas:
 - Registro de postulaciones/contactos en `contactMessages`.
 - Escritura de eventos internos en `notifications` para altas, login y checkout.
 - Navegación con **lazy loading** de páginas y `Suspense` para fallback de rutas.
+- Selector de idioma **ES/EN** con preferencia persistida en `localStorage`.
+- Selector de tema **oscuro/claro** con preferencia persistida en `localStorage`.
+- Menú principal responsive con cierre al cambiar de ruta, click externo o tecla `Escape`.
+- Catálogo con búsqueda por texto, filtro por categoría, orden por destacados/precio/nombre y vista ampliada de producto.
 
 ### Backend
 
@@ -140,6 +145,8 @@ src/
   lib/               Utilidades compartidas y cliente HTTP
   pages/             Entradas por ruta
   sections/          Composición de cada página
+public/
+  images/            Recursos visuales del catálogo
 server/
   index.js           API Express para correo transaccional
 ```
@@ -293,6 +300,7 @@ npm run firebase:deploy:hosting
 ## Consideraciones operativas
 
 - El seed del catálogo se ejecuta únicamente cuando `products` no contiene documentos.
+- Los documentos existentes de `products` se normalizan contra el seed tipado: se validan ids/categorías, se corrigen rutas legacy de imágenes y se usan valores fallback cuando faltan campos.
 - El checkout requiere usuario autenticado y correo disponible en la sesión actual.
 - El login invalida la sesión si la cuenta existe pero todavía no verificó el correo.
 - El backend valida estructura y longitud de campos antes de enviar correos.
