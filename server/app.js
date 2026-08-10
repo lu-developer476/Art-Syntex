@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/errorHandler.js'
 export function createApp(config, dependencies = {}) {
   const app = express()
   const emailService = dependencies.emailService ?? createEmailService(config)
+  app.locals.emailService = emailService
 
   app.disable('x-powered-by')
   app.set('trust proxy', 1)
