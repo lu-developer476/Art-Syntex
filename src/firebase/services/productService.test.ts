@@ -10,12 +10,12 @@ describe('productService', () => {
   it('delegates catalog retrieval to the repository', async () => {
     const products = [
       {
-        id: 'cyber-arm',
-        name: 'Cyber Arm',
-        price: 100,
-        image: '/images/cyber-arm.png',
+        id: 'sandevistan',
+        name: 'Sandevistan Mk.4',
+        price: 3200,
+        image: '/images/sandevistan.png',
         description: 'Test product',
-        category: 'implants',
+        category: 'Neural' as const,
       },
     ]
 
