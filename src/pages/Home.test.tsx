@@ -50,7 +50,7 @@ describe('Home', () => {
 
     expect(screen.getByTestId('hero-section')).toBeInTheDocument()
     expect(screen.getByText('Products')).toBeInTheDocument()
-    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getAllByText('1')).toHaveLength(2)
     expect(screen.getByText('Cart')).toBeInTheDocument()
     expect(screen.getByText('Active')).toBeInTheDocument()
   })
