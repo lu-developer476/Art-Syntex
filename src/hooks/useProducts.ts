@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { getOrSeedProducts } from '../firebase/products'
+import { getCatalog } from '../firebase/services/productService'
 import type { Product } from '../data/products'
+import { getFirebaseErrorMessage } from '../firebase/errors'
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([])
@@ -11,10 +12,16 @@ export function useProducts() {
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const items = await getOrSeedProducts()
+        setError(null)
+        const items = await getCatalog()
         setProducts(items)
-      } catch {
-        setError('No pudimos conectarte a la red. Revisá tu conexión e intentá de nuevo.')
+      } catch (loadError) {
+        setError(
+          getFirebaseErrorMessage(
+            loadError,
+            'No pudimos conectarte a la red. Revisá tu conexión e intentá de nuevo.',
+          ),
+        )
       } finally {
         setLoading(false)
       }
