@@ -11,8 +11,6 @@
 ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
 ![Nodemailer](https://img.shields.io/badge/Nodemailer-009688?style=for-the-badge)
 ![CORS](https://img.shields.io/badge/CORS-283593?style=for-the-badge)
-![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
-![Testing Library](https://img.shields.io/badge/Testing_Library-E33332?style=for-the-badge&logo=testinglibrary&logoColor=white)
 
 Art-Syntex (A/S Nexus) es una SPA orientada a catálogo, autenticación de usuarios y checkout básico. El frontend está construido con React + Vite y utiliza Firebase para autenticación, persistencia y despliegue. El repositorio también incluye un servicio Node.js independiente para envío transaccional de correos mediante Express y Nodemailer.
 
@@ -57,47 +55,36 @@ Capacidades implementadas:
 
 ### Backend
 
-Servicio opcional ubicado en `server/index.js` con:
+Servicio opcional ubicado en `server/` con:
 
 - **Express 4**
 - **CORS** configurable por origen
 - **Nodemailer** con transporte Gmail
 - Validación y sanitización de payloads
-- Rate limiting en memoria
+- Rate limiting en middleware reutilizable
 - Endpoint de salud (`GET /health`)
+- Manejo centralizado de errores HTTP
+- Configuración centralizada de entorno
+- Controllers y routes separados por responsabilidad
+- Servicio de email aislado de Express
 - Endpoints de correo:
   - `POST /contact`
   - `POST /registration-notice`
-
-La lógica de validación del backend está aislada en `server/validation.js` para poder probarla de forma independiente sin iniciar SMTP.
 
 El backend procesa dos flujos transaccionales:
 
 - Notificación de contacto/postulación al destinatario configurado y confirmación automática al remitente.
 - Correo complementario de onboarding para guiar la validación de cuenta registrada en Firebase Authentication.
 
-### Calidad y testing
+### Calidad
 
-El proyecto utiliza **Vitest** y **Testing Library** para pruebas automatizadas.
+El repositorio incluye una capa de calidad con:
 
-La suite actual cubre:
-
-- Cliente HTTP del frontend (`src/lib/api.ts`): requests exitosas y manejo de errores.
-- Enrutamiento principal de React: home, acceso, productos, contacto y verificación de email.
-- Comportamiento de la página Home y estados de sincronización.
-- Sanitización y validación del backend.
-- Validación de formularios de contacto y onboarding.
-- Casos positivos y negativos de validación.
-
-Comandos disponibles:
-
-```bash
-npm run test
-npm run test:watch
-npm run test:coverage
-```
-
-La cobertura se genera con el provider **V8** y los artefactos de `coverage/` no se versionan.
+- **Vitest** para unit/integration tests.
+- **Testing Library** para componentes React.
+- **V8 Coverage** para medición de cobertura.
+- Tests de routing, Home, cliente HTTP, validación backend, configuración y límites de la aplicación Express.
+- **GitHub Actions** para ejecutar tests y build en pushes y Pull Requests hacia `main`.
 
 ## Rol de Firebase
 
@@ -152,18 +139,22 @@ Frontend SPA (React + Vite)
         |-- Cloud Firestore
         \-- Firebase Hosting
 
-Servicio de correo opcional (Node.js)
+Servicio de correo (Node.js)
         |
-        |-- Express
-        |-- CORS
-        |-- Nodemailer
-        \-- SMTP / Gmail
+        |-- app.js                 Composición de Express
+        |-- config/env.js          Configuración de entorno
+        |-- routes/                Entrada HTTP
+        |-- controllers/           Orquestación de requests
+        |-- services/              Integraciones externas
+        |-- middleware/            Rate limit + errores
+        \-- core/errors.js         Errores de aplicación
 
 Quality layer
         |
         |-- Vitest
         |-- Testing Library
-        \-- V8 Coverage
+        |-- V8 Coverage
+        \-- GitHub Actions
 ```
 
 ## Estructura principal del repositorio
@@ -182,7 +173,14 @@ src/
 public/
   images/            Recursos visuales del catálogo
 server/
-  index.js           API Express para correo transaccional
+  index.js           Entry point del servicio
+  app.js             Composición de Express
+  config/env.js      Configuración y validación del entorno
+  core/errors.js     Errores de aplicación
+  controllers/      Controllers HTTP
+  middleware/        Rate limiting y manejo global de errores
+  routes/            Rutas HTTP
+  services/          Integraciones de correo
   validation.js      Validación y sanitización testeable
 ```
 
@@ -222,7 +220,7 @@ VITE_API_BASE_URL=http://localhost:3001
 
 `VITE_API_BASE_URL` define la base de la API consumida por el frontend para `/contact` y `/registration-notice`. Si no se declara, el cliente usa `http://localhost:3001`.
 
-### Backend (`server/index.js`)
+### Backend
 
 ```env
 EMAIL_USER=
@@ -240,7 +238,7 @@ Descripción:
 - `CONTACT_RECEIVER_EMAIL`: destinatario de las postulaciones; si no se informa, se utiliza `EMAIL_USER`.
 - `ALLOWED_ORIGIN`: origen permitido por CORS.
 - `APP_BASE_URL`: URL pública usada en links incluidos en los correos.
-- `PORT`: puerto de escucha del servicio Express.
+- `PORT`: puerto de escucha del servicio Express; por defecto `3001`.
 
 `EMAIL_USER` y `EMAIL_PASS` son obligatorias para iniciar el backend. El frontend puede ejecutarse sin estas variables siempre que no se requiera el servicio de correo.
 
@@ -255,7 +253,7 @@ npm install
 ### 2. Configurar entorno
 
 - Completar `.env` con las credenciales de Firebase.
-- Si se ejecuta el backend, exportar o definir las variables requeridas por `server/index.js`.
+- Si se ejecuta el backend, exportar o definir las variables requeridas por `server/`.
 - Habilitar en Firebase Console:
   - Authentication > Email/Password
   - Firestore Database
@@ -343,4 +341,5 @@ npm run firebase:deploy:hosting
 - El login invalida la sesión si la cuenta existe pero todavía no verificó el correo.
 - El backend valida estructura y longitud de campos antes de enviar correos.
 - El rate limit del servicio Express utiliza almacenamiento en memoria; para despliegues horizontales conviene reemplazarlo por un store externo.
+- El backend separa configuración, routing, controllers, servicios, middleware y errores para mantener las responsabilidades aisladas.
 - La colección `mail` figura en las reglas de Firestore, pero no existe escritura activa hacia esa colección dentro del código actual.
