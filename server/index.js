@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 import nodemailer from 'nodemailer'
+import { validateContactPayload, validateRegistrationPayload } from './validation.js'
 
 const REQUIRED_ENV_VARS = ['EMAIL_USER', 'EMAIL_PASS']
 const missingEnvVars = REQUIRED_ENV_VARS.filter((envVar) => !process.env[envVar]?.trim())
@@ -13,10 +14,6 @@ if (missingEnvVars.length > 0) {
 const PORT = Number.parseInt(process.env.PORT ?? '3001', 10)
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const RATE_LIMIT_MAX_REQUESTS = 6
-const MAX_NAME_LENGTH = 120
-const MAX_EMAIL_LENGTH = 254
-const MAX_MESSAGE_LENGTH = 5000
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const requestLog = new Map()
 
 const app = express()
@@ -44,15 +41,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 })
-
-function sanitizeInput(value, maxLength) {
-  return String(value ?? '')
-    .replace(/[\u0000-\u001F\u007F]/g, ' ')
-    .replace(/[<>]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxLength)
-}
 
 function getClientIp(req) {
   const forwardedFor = req.headers['x-forwarded-for']
@@ -93,73 +81,6 @@ function applyRateLimit(req, res, next) {
   }
 
   return next()
-}
-
-function validateContactPayload(payload) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return {
-      isValid: false,
-      errors: ['Request body must be a JSON object.'],
-      sanitizedData: null,
-    }
-  }
-
-  const sanitizedData = {
-    name: sanitizeInput(payload.name, MAX_NAME_LENGTH),
-    email: sanitizeInput(payload.email, MAX_EMAIL_LENGTH).toLowerCase(),
-    message: sanitizeInput(payload.message, MAX_MESSAGE_LENGTH),
-  }
-
-  const errors = []
-
-  if (sanitizedData.name.length < 2) {
-    errors.push('Name must be at least 2 characters long.')
-  }
-
-  if (!EMAIL_REGEX.test(sanitizedData.email)) {
-    errors.push('Email address is invalid.')
-  }
-
-  if (sanitizedData.message.length < 20) {
-    errors.push('Message must be at least 20 characters long.')
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    sanitizedData,
-  }
-}
-
-function validateRegistrationPayload(payload) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return {
-      isValid: false,
-      errors: ['Request body must be a JSON object.'],
-      sanitizedData: null,
-    }
-  }
-
-  const sanitizedData = {
-    email: sanitizeInput(payload.email, MAX_EMAIL_LENGTH).toLowerCase(),
-    verificationUrl: sanitizeInput(payload.verificationUrl, 1200),
-  }
-
-  const errors = []
-
-  if (!EMAIL_REGEX.test(sanitizedData.email)) {
-    errors.push('Email address is invalid.')
-  }
-
-  if (!/^https?:\/\//.test(sanitizedData.verificationUrl)) {
-    errors.push('Verification URL is invalid.')
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    sanitizedData,
-  }
 }
 
 function renderEmailShell({ eyebrow, title, body, ctaLabel, ctaHref, footer }) {
