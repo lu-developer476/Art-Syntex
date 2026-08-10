@@ -11,6 +11,8 @@
 ![Express](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
 ![Nodemailer](https://img.shields.io/badge/Nodemailer-009688?style=for-the-badge)
 ![CORS](https://img.shields.io/badge/CORS-283593?style=for-the-badge)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
+![Testing Library](https://img.shields.io/badge/Testing_Library-E33332?style=for-the-badge&logo=testinglibrary&logoColor=white)
 
 Art-Syntex (A/S Nexus) es una SPA orientada a catálogo, autenticación de usuarios y checkout básico. El frontend está construido con React + Vite y utiliza Firebase para autenticación, persistencia y despliegue. El repositorio también incluye un servicio Node.js independiente para envío transaccional de correos mediante Express y Nodemailer.
 
@@ -67,10 +69,35 @@ Servicio opcional ubicado en `server/index.js` con:
   - `POST /contact`
   - `POST /registration-notice`
 
+La lógica de validación del backend está aislada en `server/validation.js` para poder probarla de forma independiente sin iniciar SMTP.
+
 El backend procesa dos flujos transaccionales:
 
 - Notificación de contacto/postulación al destinatario configurado y confirmación automática al remitente.
 - Correo complementario de onboarding para guiar la validación de cuenta registrada en Firebase Authentication.
+
+### Calidad y testing
+
+El proyecto utiliza **Vitest** y **Testing Library** para pruebas automatizadas.
+
+La suite actual cubre:
+
+- Cliente HTTP del frontend (`src/lib/api.ts`): requests exitosas y manejo de errores.
+- Enrutamiento principal de React: home, acceso, productos, contacto y verificación de email.
+- Comportamiento de la página Home y estados de sincronización.
+- Sanitización y validación del backend.
+- Validación de formularios de contacto y onboarding.
+- Casos positivos y negativos de validación.
+
+Comandos disponibles:
+
+```bash
+npm run test
+npm run test:watch
+npm run test:coverage
+```
+
+La cobertura se genera con el provider **V8** y los artefactos de `coverage/` no se versionan.
 
 ## Rol de Firebase
 
@@ -131,6 +158,12 @@ Servicio de correo opcional (Node.js)
         |-- CORS
         |-- Nodemailer
         \-- SMTP / Gmail
+
+Quality layer
+        |
+        |-- Vitest
+        |-- Testing Library
+        \-- V8 Coverage
 ```
 
 ## Estructura principal del repositorio
@@ -143,12 +176,14 @@ src/
   hooks/             Lógica de auth, catálogo y carrito
   layout/            Shell principal y navegación
   lib/               Utilidades compartidas y cliente HTTP
-  pages/             Entradas por ruta
+  pages/             Entradas por ruta y pruebas de páginas
   sections/          Composición de cada página
+  test/              Configuración global de Testing Library
 public/
   images/            Recursos visuales del catálogo
 server/
   index.js           API Express para correo transaccional
+  validation.js      Validación y sanitización testeable
 ```
 
 ## Requisitos
@@ -292,6 +327,9 @@ npm run dev
 npm run build
 npm run preview
 npm run server
+npm run test
+npm run test:watch
+npm run test:coverage
 npm run firebase:deploy
 npm run firebase:deploy:firestore
 npm run firebase:deploy:hosting
