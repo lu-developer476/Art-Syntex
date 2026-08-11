@@ -19,11 +19,24 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (nextUser) => {
+    return onAuthStateChanged(auth, async (nextUser) => {
       setUser(nextUser)
-      setLoading(false)
+
+      if (!nextUser) {
+        setIsAdmin(false)
+        setLoading(false)
+        return
+      }
+
+      try {
+        const token = await nextUser.getIdTokenResult()
+        setIsAdmin(token.claims.admin === true)
+      } finally {
+        setLoading(false)
+      }
     })
   }, [])
 
@@ -32,11 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isAuthenticated: Boolean(user),
     isEmailVerified: Boolean(user?.emailVerified),
-    isAdmin: Boolean(user?.getIdTokenResult && false),
+    isAdmin,
     login: loginWithEmail,
     register: registerWithEmail,
     logout,
-  }), [loading, user])
+  }), [isAdmin, loading, user])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
