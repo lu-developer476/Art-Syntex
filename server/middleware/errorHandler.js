@@ -1,16 +1,17 @@
 import { AppError } from '../core/errors.js'
 
-export function errorHandler(error, _req, res, _next) {
+export function errorHandler(error, req, res, _next) {
   const isKnownError = error instanceof AppError
   const statusCode = isKnownError ? error.statusCode : 500
 
   if (!isKnownError) {
-    console.error('[ERROR] Unhandled server error.', error)
+    console.error(`[ERROR] requestId=${req.requestId ?? 'unknown'} Unhandled server error.`, error)
   }
 
   const response = {
     success: false,
     error: isKnownError ? error.message : 'Internal server error.',
+    requestId: req.requestId,
   }
 
   if (isKnownError && error.details) {
