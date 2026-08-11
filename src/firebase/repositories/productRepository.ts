@@ -70,3 +70,11 @@ export async function findOrSeedProducts(): Promise<Product[]> {
   const products = await findAllProducts()
   return products.length > 0 ? products : productsSeed.map((product) => ({ ...product }))
 }
+
+/**
+ * Backward-compatible seed facade. The current client-side repository does not
+ * write to Firestore; seeding is performed by the trusted backend/deployment.
+ */
+export async function seedProducts(): Promise<Product[]> {
+  return productsSeed.map((product) => ({ ...product }))
+}
