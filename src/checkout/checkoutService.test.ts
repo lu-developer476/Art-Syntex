@@ -20,7 +20,7 @@ describe('createCheckoutQuote', () => {
     ])
 
     const quote = await createCheckoutQuote([
-      { productId: 'sandevistan', quantity: 2, unitPrice: 1 },
+      { productId: 'sandevistan', quantity: 2 },
     ])
 
     expect(quote.total).toBe(6400)
