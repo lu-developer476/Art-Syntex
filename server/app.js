@@ -19,18 +19,16 @@ export function createApp(config, dependencies = {}) {
   app.use(requestId)
   app.use(securityHeaders)
   app.use(
-    cors(
-      config.cors.allowedOrigin
-        ? {
-            origin: config.cors.allowedOrigin,
-            methods: ['GET', 'POST', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'X-Request-ID'],
-          }
-        : {
-            methods: ['GET', 'POST', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'X-Request-ID'],
-          },
-    ),
+    cors({
+      origin(origin, callback) {
+        if (!origin || config.cors.allowedOrigins.length === 0 || config.cors.allowedOrigins.includes(origin)) {
+          return callback(null, true)
+        }
+        return callback(new Error('Origin not allowed by CORS.'))
+      },
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'X-Request-ID'],
+    }),
   )
   app.use(express.json({ limit: '10kb', strict: true }))
   app.use(requestGuards)
