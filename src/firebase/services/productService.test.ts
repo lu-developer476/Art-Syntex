@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { getCatalog } from './productService'
 import { findOrSeedProducts } from '../repositories/productRepository'
+import type { Product } from '../../data/products'
 
 vi.mock('../repositories/productRepository', () => ({
   findOrSeedProducts: vi.fn(),
@@ -8,14 +9,14 @@ vi.mock('../repositories/productRepository', () => ({
 
 describe('productService', () => {
   it('delegates catalog retrieval to the repository', async () => {
-    const products = [
+    const products: Product[] = [
       {
         id: 'sandevistan',
         name: 'Sandevistan Mk.4',
         price: 3200,
         image: '/images/sandevistan.png',
         description: 'Test product',
-        category: 'Neural' as const,
+        category: 'Neural',
       },
     ]
 
