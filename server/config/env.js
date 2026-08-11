@@ -1,4 +1,10 @@
-const REQUIRED_ENV_VARS = ['EMAIL_USER', 'EMAIL_PASS']
+const REQUIRED_ENV_VARS = [
+  'EMAIL_USER',
+  'EMAIL_PASS',
+  'FIREBASE_ADMIN_PROJECT_ID',
+  'FIREBASE_ADMIN_CLIENT_EMAIL',
+  'FIREBASE_ADMIN_PRIVATE_KEY',
+]
 
 function readOptionalEnv(env, name, fallback = '') {
   return env[name]?.trim() || fallback
@@ -16,35 +22,22 @@ function readAllowedOrigins(env) {
 
   if (!raw) return []
 
-  return raw
-    .split(',')
-    .map((origin) => origin.trim().replace(/\/$/, ''))
-    .filter(Boolean)
+  return raw.split(',').map((origin) => origin.trim().replace(/\/$/, '')).filter(Boolean)
 }
 
 export function getConfig(env = process.env) {
   const missing = REQUIRED_ENV_VARS.filter((name) => !env[name]?.trim())
   const allowedOrigins = readAllowedOrigins(env)
-  const appBaseUrl = readOptionalEnv(
-    env,
-    'APP_BASE_URL',
-    allowedOrigins[0] || 'http://localhost:5173',
-  ).replace(/\/$/, '')
+  const appBaseUrl = readOptionalEnv(env, 'APP_BASE_URL', allowedOrigins[0] || 'http://localhost:5173').replace(/\/$/, '')
 
   return {
     port: readPort(env.PORT),
     email: {
       user: readOptionalEnv(env, 'EMAIL_USER'),
       pass: readOptionalEnv(env, 'EMAIL_PASS'),
-      receiver: readOptionalEnv(
-        env,
-        'CONTACT_RECEIVER_EMAIL',
-        readOptionalEnv(env, 'EMAIL_USER'),
-      ),
+      receiver: readOptionalEnv(env, 'CONTACT_RECEIVER_EMAIL', readOptionalEnv(env, 'EMAIL_USER')),
     },
-    cors: {
-      allowedOrigins,
-    },
+    cors: { allowedOrigins },
     appBaseUrl,
     missing,
   }
