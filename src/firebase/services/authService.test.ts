@@ -1,5 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('../config', () => ({
+  auth: {},
+}))
+
 import { getAuthErrorMessage, isEmailVerified } from './authService'
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('authService', () => {
   it('maps Firebase auth errors to safe user-facing messages', () => {
