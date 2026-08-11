@@ -39,11 +39,11 @@ function validateItems(input) {
   return [...merged.entries()]
 }
 
-export function createCheckoutService(services = getAdminServices()) {
-  const { auth, db } = services
-
+export function createCheckoutService(services) {
   async function createPendingOrder({ idToken, items }) {
+    const { auth, db } = services ?? getAdminServices()
     const decodedToken = await auth.verifyIdToken(idToken)
+
     if (!decodedToken.email_verified) {
       const error = new Error('Email verification is required before checkout.')
       error.statusCode = 403
