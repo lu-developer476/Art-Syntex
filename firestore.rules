@@ -24,6 +24,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
