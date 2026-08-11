@@ -17,7 +17,7 @@ export function validateCheckoutItems(input: unknown): CheckoutItemInput[] {
     const productId = (item as { productId?: unknown }).productId
     const quantity = (item as { quantity?: unknown }).quantity
 
-    if (!isProductId(productId) || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+    if (!isProductId(productId) || typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
       throw new Error('El carrito contiene una cantidad o producto inválido.')
     }
 
