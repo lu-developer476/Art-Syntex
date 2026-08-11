@@ -6,6 +6,9 @@ describe('backend configuration', () => {
     const config = getConfig({
       EMAIL_USER: ' mail@example.com ',
       EMAIL_PASS: ' secret ',
+      FIREBASE_ADMIN_PROJECT_ID: 'project-id',
+      FIREBASE_ADMIN_CLIENT_EMAIL: 'firebase-admin@example.com',
+      FIREBASE_ADMIN_PRIVATE_KEY: 'private-key',
       ALLOWED_ORIGIN: 'https://art-syntex.example/',
       PORT: '4000',
     })
@@ -19,10 +22,16 @@ describe('backend configuration', () => {
     expect(config.missing).toEqual([])
   })
 
-  it('reports missing required credentials without throwing during parsing', () => {
+  it('reports all missing required credentials without throwing during parsing', () => {
     const config = getConfig({ PORT: 'invalid' })
 
     expect(config.port).toBe(3001)
-    expect(config.missing).toEqual(['EMAIL_USER', 'EMAIL_PASS'])
+    expect(config.missing).toEqual([
+      'EMAIL_USER',
+      'EMAIL_PASS',
+      'FIREBASE_ADMIN_PROJECT_ID',
+      'FIREBASE_ADMIN_CLIENT_EMAIL',
+      'FIREBASE_ADMIN_PRIVATE_KEY',
+    ])
   })
 })
