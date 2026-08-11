@@ -14,7 +14,7 @@ describe('backend configuration', () => {
     expect(config.email.user).toBe('mail@example.com')
     expect(config.email.pass).toBe('secret')
     expect(config.email.receiver).toBe('mail@example.com')
-    expect(config.cors.allowedOrigin).toBe('https://art-syntex.example/')
+    expect(config.cors.allowedOrigins).toEqual(['https://art-syntex.example'])
     expect(config.appBaseUrl).toBe('https://art-syntex.example')
     expect(config.missing).toEqual([])
   })
