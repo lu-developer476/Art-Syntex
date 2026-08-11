@@ -1,9 +1,6 @@
 import {
   collection,
-  doc,
   getDocs,
-  serverTimestamp,
-  writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
@@ -69,26 +66,7 @@ export async function findAllProducts(): Promise<Product[]> {
   }
 }
 
-export async function seedProducts(): Promise<Product[]> {
-  try {
-    const batch = writeBatch(db)
-
-    productsSeed.forEach((product) => {
-      batch.set(doc(productsCollection, product.id), {
-        ...product,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      })
-    })
-
-    await batch.commit()
-    return productsSeed.map((product) => ({ ...product }))
-  } catch (error) {
-    throw new FirebaseDataError('No pudimos inicializar el catálogo en Firestore.', error)
-  }
-}
-
 export async function findOrSeedProducts(): Promise<Product[]> {
   const products = await findAllProducts()
-  return products.length > 0 ? products : seedProducts()
+  return products.length > 0 ? products : productsSeed.map((product) => ({ ...product }))
 }
