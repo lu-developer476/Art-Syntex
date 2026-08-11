@@ -20,3 +20,10 @@ export class ExternalServiceError extends AppError {
     this.name = 'ExternalServiceError'
   }
 }
+
+export class SecurityError extends AppError {
+  constructor(message = 'Request rejected.') {
+    super(message, 403)
+    this.name = 'SecurityError'
+  }
+}
