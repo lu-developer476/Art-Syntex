@@ -35,7 +35,9 @@ export function isEmailVerified(user: User | null) {
 }
 
 export function getAuthErrorMessage(error: unknown) {
-  const code = error instanceof Error && 'code' in error ? String(error.code) : ''
+  const code = typeof error === 'object' && error !== null && 'code' in error
+    ? String((error as { code?: unknown }).code ?? '')
+    : ''
 
   const messages: Record<string, string> = {
     'auth/invalid-email': 'El correo electrónico no es válido.',
