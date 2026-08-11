@@ -1,6 +1,6 @@
 import { getAdminServices } from '../services/firebaseAdmin.js'
 
-export function createFirebaseAuthenticator(services = getAdminServices()) {
+export function createFirebaseAuthenticator(services) {
   return async function authenticateFirebase(req, res, next) {
     try {
       const authorization = req.get('authorization')
@@ -8,7 +8,8 @@ export function createFirebaseAuthenticator(services = getAdminServices()) {
         return res.status(401).json({ success: false, error: 'Authentication required.', requestId: req.requestId })
       }
 
-      req.firebaseUser = await services.auth.verifyIdToken(authorization.slice(7))
+      const adminServices = services ?? getAdminServices()
+      req.firebaseUser = await adminServices.auth.verifyIdToken(authorization.slice(7))
       return next()
     } catch {
       return res.status(401).json({ success: false, error: 'Invalid authentication token.', requestId: req.requestId })
