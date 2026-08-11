@@ -9,19 +9,26 @@ const config = {
     receiver: 'receiver@example.com',
   },
   cors: {
-    allowedOrigin: 'http://localhost:5173',
+    allowedOrigins: ['http://localhost:5173'],
   },
   appBaseUrl: 'http://localhost:5173',
 }
 
 describe('Express application', () => {
-  it('exposes a health endpoint without requiring SMTP', async () => {
-    const emailService = {
+  const createTestDependencies = () => ({
+    emailService: {
       transporter: { verify: vi.fn() },
       sendContactEmails: vi.fn(),
       sendRegistrationNotice: vi.fn(),
-    }
-    const app = createApp(config, { emailService })
+    },
+    adminServices: {
+      auth: { verifyIdToken: vi.fn() },
+      db: {},
+    },
+  })
+
+  it('exposes a health endpoint without requiring SMTP or Firebase Admin credentials', async () => {
+    const app = createApp(config, createTestDependencies())
 
     const response = await new Promise((resolve) => {
       const server = app.listen(0, () => {
@@ -33,16 +40,11 @@ describe('Express application', () => {
 
     expect(response.status).toBe(200)
     expect(response.body.status).toBe('OK')
-    expect(response.body.service).toBe('art-syntex-mail-api')
+    expect(response.body.service).toBe('art-syntex-api')
   })
 
   it('returns a consistent 404 response for unknown routes', async () => {
-    const emailService = {
-      transporter: { verify: vi.fn() },
-      sendContactEmails: vi.fn(),
-      sendRegistrationNotice: vi.fn(),
-    }
-    const app = createApp(config, { emailService })
+    const app = createApp(config, createTestDependencies())
 
     const response = await new Promise((resolve) => {
       const server = app.listen(0, () => {
