@@ -34,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const token = await nextUser.getIdTokenResult()
         setIsAdmin(token.claims.admin === true)
+      } catch {
+        setIsAdmin(false)
       } finally {
         setLoading(false)
       }
