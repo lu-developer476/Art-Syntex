@@ -25,6 +25,23 @@ const themeOptions: Array<{ value: Theme; labelKey: 'themeDark' | 'themeLight'; 
   { value: 'light', labelKey: 'themeLight', icon: '☀️', ariaLabelKey: 'ariaLight' },
 ]
 
+const brandMessages: Record<Language, string[]> = {
+  es: [
+    'CARNE Y CROMO. LA EVOLUCIÓN NO PIDE PERMISO.',
+    'NIGHT CITY NO REGALA NADA: CADA MEJORA SE GANA.',
+    'TECNOLOGÍA DE AUMENTO HUMANO. PRECISIÓN POR ENCIMA DEL RUIDO.',
+    'TU CUERPO. TUS LÍMITES. TU PRÓXIMA VERSIÓN.',
+    'EN LA CIUDAD DEL MAÑANA, ADAPTARSE ES SOBREVIVIR.',
+  ],
+  en: [
+    'FLESH AND CHROME. EVOLUTION DOES NOT ASK PERMISSION.',
+    'NIGHT CITY GIVES NOTHING AWAY: EVERY UPGRADE IS EARNED.',
+    'HUMAN AUGMENTATION TECHNOLOGY. PRECISION OVER NOISE.',
+    'YOUR BODY. YOUR LIMITS. YOUR NEXT VERSION.',
+    'IN THE CITY OF TOMORROW, ADAPTATION IS SURVIVAL.',
+  ],
+}
+
 const getStoredPreference = <T extends string>(key: string, fallback: T, allowedValues: readonly T[]) => {
   if (typeof window === 'undefined') {
     return fallback
@@ -40,6 +57,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const navRef = useRef<HTMLElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [tickerIndex, setTickerIndex] = useState(0)
   const [language, setLanguage] = useState<Language>(() =>
     getStoredPreference('as-nexus-language', 'es', ['es', 'en'] as const),
   )
@@ -51,6 +69,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     setIsMenuOpen(false)
   }, [location.pathname])
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setTickerIndex((current) => (current + 1) % brandMessages[language].length)
+    }, 5500)
+
+    return () => window.clearInterval(interval)
+  }, [language])
 
   useEffect(() => {
     document.documentElement.lang = language
@@ -202,8 +228,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </I18nProvider>
 
       <footer className="mt-12 border-t border-purple-500/40 pt-6 text-center text-xs leading-relaxed tracking-wide text-purple-200 md:text-sm">
-        <p>© 2026 Todos los derechos reservados • Built with React.js, Next.js, TypeScript &amp; Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®</p>
-        <p className="mt-2">Plataforma comercial de Night City. La identidad debe validarse para acceder a las funciones de la red.</p>
+        <span className="text-cyber-gold">©</span> {new Date().getFullYear()} {t('rights')} • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
       </footer>
     </div>
   )
