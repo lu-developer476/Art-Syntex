@@ -222,14 +222,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <main className="flex-1">{children}</main>
         <footer className="mx-auto mt-10 w-full max-w-6xl overflow-hidden rounded-2xl border border-purple-400/30 bg-black/65 shadow-[0_0_35px_rgba(168,85,247,0.1)] backdrop-blur-xl">
           <div className="grid gap-8 px-5 py-7 sm:grid-cols-2 md:px-8 lg:grid-cols-[1.2fr_0.8fr_1fr] lg:gap-10 lg:py-9">
-            <section aria-labelledby="footerBrandTitle">
+            <div role="group" aria-labelledby="footerBrandTitle">
               <Link to="/" className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 <img src="/logo.svg" alt="" className="h-11 w-11 object-contain" />
                 <span id="footerBrandTitle" className="font-android text-base font-bold tracking-[0.16em] text-purple-100">A/S NEXUS</span>
               </Link>
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-purple-200/75">{t('footerDescription')}</p>
               <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/70">Night City · Est. 2077</p>
-            </section>
+            </div>
 
             <nav aria-label={t('footerExplore')}>
               <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">{t('footerExplore')}</h2>
@@ -244,14 +244,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
               </ul>
             </nav>
 
-            <section aria-labelledby="footerSupportTitle">
+            <div role="group" aria-labelledby="footerSupportTitle">
               <h2 id="footerSupportTitle" className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">{t('footerSupport')}</h2>
               <p className="text-sm leading-relaxed text-purple-200/75">{t('footerSupportCopy')}</p>
               <Link to="/contacto" className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-cyan-300/50 bg-cyan-300/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-cyan-100 transition hover:border-cyan-200 hover:bg-cyan-300/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
                 {t('footerContactAction')} <span aria-hidden="true">↗</span>
               </Link>
               <p className="mt-4 text-[10px] uppercase tracking-[0.12em] text-purple-300/60">{t('footerAccessNote')}</p>
-            </section>
+            </div>
           </div>
           <div className="border-t border-purple-400/20 px-5 py-4 text-center md:px-8">
             <p className="text-[10px] leading-relaxed text-purple-300/65">{t('footerNotice')}</p>
