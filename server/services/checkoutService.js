@@ -44,8 +44,8 @@ export function createCheckoutService(services) {
     const { auth, db } = services ?? getAdminServices()
     const decodedToken = await auth.verifyIdToken(idToken)
 
-    if (!decodedToken.email_verified) {
-      const error = new Error('Email verification is required before checkout.')
+    if (!decodedToken.email_verified || typeof decodedToken.email !== 'string' || !decodedToken.email.trim()) {
+      const error = new Error('A verified email address is required before checkout.')
       error.statusCode = 403
       throw error
     }
@@ -58,7 +58,7 @@ export function createCheckoutService(services) {
     const lines = normalizedItems.map(([productId, quantity]) => {
       const snapshot = products.get(productId)
       if (!snapshot?.exists) {
-        const error = new Error(`Product ${productId} is unavailable.`)
+        const error = new Error('Product ' + productId + ' is unavailable.')
         error.statusCode = 409
         throw error
       }
@@ -66,14 +66,14 @@ export function createCheckoutService(services) {
       const product = snapshot.data()
       const unitPrice = Number(product.price)
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-        const error = new Error(`Product ${productId} has an invalid price.`)
+        const error = new Error('Product ' + productId + ' has an invalid price.')
         error.statusCode = 500
         throw error
       }
 
       return {
         productId,
-        name: String(product.name ?? productId),
+        name: String(product.name ?? productId).slice(0, 160),
         unitPrice: roundMoney(unitPrice),
         quantity,
         lineTotal: roundMoney(unitPrice * quantity),
@@ -81,20 +81,42 @@ export function createCheckoutService(services) {
     })
 
     const total = roundMoney(lines.reduce((sum, line) => sum + line.lineTotal, 0))
-    const orderRef = db.collection('orders').doc()
+    const orderRef = db.collection('purchaseOrders').doc()
+    const customerEmail = decodedToken.email.trim().toLowerCase()
+    const customerName = typeof decodedToken.name === 'string' && decodedToken.name.trim()
+      ? decodedToken.name.trim().slice(0, 120)
+      : 'Cliente de Art-Syntex'
+    const createdAt = new Date().toISOString()
 
     await orderRef.set({
-      userId: decodedToken.uid,
-      currency: 'USD',
-      items: lines,
-      subtotal: total,
-      total,
+      uid: decodedToken.uid,
+      email: customerEmail,
       status: 'pending',
       paymentStatus: 'unpaid',
+      currency: 'USD',
+      items: lines.map((line) => ({
+        productId: line.productId,
+        name: line.name,
+        price: line.unitPrice,
+        quantity: line.quantity,
+        subtotal: line.lineTotal,
+      })),
+      subtotal: total,
+      total,
       createdAt: FieldValue.serverTimestamp(),
     })
 
-    return { orderId: orderRef.id, total, currency: 'USD' }
+    return {
+      orderId: orderRef.id,
+      customerEmail,
+      customerName,
+      items: lines,
+      subtotal: total,
+      total,
+      currency: 'USD',
+      status: 'pending',
+      createdAt,
+    }
   }
 
   return { createPendingOrder }
