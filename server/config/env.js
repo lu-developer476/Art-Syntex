@@ -1,5 +1,6 @@
+const DEFAULT_EMAIL_USER = 'lucasmontenegroburgos@gmail.com'
+
 const REQUIRED_ENV_VARS = [
-  'EMAIL_USER',
   'EMAIL_PASS',
   'FIREBASE_ADMIN_PROJECT_ID',
   'FIREBASE_ADMIN_CLIENT_EMAIL',
@@ -10,9 +11,14 @@ function readOptionalEnv(env, name, fallback = '') {
   return env[name]?.trim() || fallback
 }
 
-function readPort(value, fallback = 3001) {
+function readPort(value, fallback = 465) {
   const port = Number.parseInt(value ?? '', 10)
   return Number.isInteger(port) && port > 0 && port <= 65535 ? port : fallback
+}
+
+function readBoolean(value, fallback) {
+  if (value == null || value.trim() === '') return fallback
+  return ['true', '1', 'yes'].includes(value.trim().toLowerCase())
 }
 
 function readAllowedOrigins(env) {
@@ -29,13 +35,24 @@ export function getConfig(env = process.env) {
   const missing = REQUIRED_ENV_VARS.filter((name) => !env[name]?.trim())
   const allowedOrigins = readAllowedOrigins(env)
   const appBaseUrl = readOptionalEnv(env, 'APP_BASE_URL', allowedOrigins[0] || 'http://localhost:5173').replace(/\/$/, '')
+  const emailUser = readOptionalEnv(env, 'EMAIL_USER', DEFAULT_EMAIL_USER)
+  const contactReceiver = readOptionalEnv(env, 'CONTACT_RECEIVER_EMAIL', emailUser)
 
   return {
-    port: readPort(env.PORT),
+    port: readPort(env.PORT, 3001),
+    smtp: {
+      host: readOptionalEnv(env, 'SMTP_HOST', 'smtp.gmail.com'),
+      port: readPort(env.SMTP_PORT, 465),
+      secure: readBoolean(env.SMTP_SECURE, readPort(env.SMTP_PORT, 465) === 465),
+    },
     email: {
-      user: readOptionalEnv(env, 'EMAIL_USER'),
+      user: emailUser,
       pass: readOptionalEnv(env, 'EMAIL_PASS'),
-      receiver: readOptionalEnv(env, 'CONTACT_RECEIVER_EMAIL', readOptionalEnv(env, 'EMAIL_USER')),
+      receiver: contactReceiver,
+      contactFrom: readOptionalEnv(env, 'CONTACT_FROM', emailUser),
+      contactReplyTo: readOptionalEnv(env, 'CONTACT_REPLY_TO', contactReceiver),
+      newsletterFrom: readOptionalEnv(env, 'NEWSLETTER_FROM', emailUser),
+      registrationFrom: readOptionalEnv(env, 'REGISTRATION_FROM', emailUser),
     },
     cors: { allowedOrigins },
     appBaseUrl,
