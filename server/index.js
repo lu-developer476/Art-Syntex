@@ -11,18 +11,8 @@ try {
 }
 
 const app = createApp(config)
-const emailService = app.locals.emailService
 
-async function startServer() {
-  try {
-    await emailService.transporter.verify()
-    app.listen(config.port, () => {
-      console.log(`[INFO] Mail server running on ${config.port}`)
-    })
-  } catch (error) {
-    console.error('[ERROR] Mail transporter verification failed.', error)
-    process.exit(1)
-  }
-}
-
-startServer()
+app.listen(config.port, () => {
+  const mailStatus = config.smtp.configured ? 'configured' : 'not configured'
+  console.log(`[INFO] Art-Syntex API running on port ${config.port}. SMTP: ${mailStatus}.`)
+})

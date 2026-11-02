@@ -18,6 +18,7 @@ describe('backend configuration', () => {
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
+      configured: true,
     })
     expect(config.email).toEqual({
       user: 'mail@example.com',
@@ -69,6 +70,7 @@ describe('backend configuration', () => {
       host: 'smtp.example.net',
       port: 587,
       secure: false,
+      configured: true,
     })
     expect(config.email.contactFrom).toBe('contacto@art-syntex.net')
     expect(config.email.contactReplyTo).toBe('inbox@art-syntex.net')
@@ -76,12 +78,23 @@ describe('backend configuration', () => {
     expect(config.email.registrationFrom).toBe('acceso@art-syntex.net')
   })
 
-  it('reports missing required credentials without throwing during parsing', () => {
+  it('does not require SMTP credentials to run checkout and generate purchase-order PDFs', () => {
+    const config = getConfig({
+      FIREBASE_ADMIN_PROJECT_ID: 'project-id',
+      FIREBASE_ADMIN_CLIENT_EMAIL: 'firebase-admin@example.com',
+      FIREBASE_ADMIN_PRIVATE_KEY: 'private-key',
+    })
+
+    expect(config.smtp.configured).toBe(false)
+    expect(config.email.pass).toBe('')
+    expect(config.missing).toEqual([])
+  })
+
+  it('reports missing Firebase Admin credentials without throwing during parsing', () => {
     const config = getConfig({ PORT: 'invalid' })
 
     expect(config.port).toBe(3001)
     expect(config.missing).toEqual([
-      'EMAIL_PASS',
       'FIREBASE_ADMIN_PROJECT_ID',
       'FIREBASE_ADMIN_CLIENT_EMAIL',
       'FIREBASE_ADMIN_PRIVATE_KEY',

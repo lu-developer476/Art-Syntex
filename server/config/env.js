@@ -1,7 +1,9 @@
 const DEFAULT_EMAIL_USER = 'lucasmontenegroburgos@gmail.com'
 
+// Firebase Admin is required for authenticated checkout and order persistence.
+// SMTP is optional: PDF generation and order registration must remain available
+// when email credentials are missing or the mail provider is temporarily down.
 const REQUIRED_ENV_VARS = [
-  'EMAIL_PASS',
   'FIREBASE_ADMIN_PROJECT_ID',
   'FIREBASE_ADMIN_CLIENT_EMAIL',
   'FIREBASE_ADMIN_PRIVATE_KEY',
@@ -44,6 +46,7 @@ export function getConfig(env = process.env) {
       host: readOptionalEnv(env, 'SMTP_HOST', 'smtp.gmail.com'),
       port: readPort(env.SMTP_PORT, 465),
       secure: readBoolean(env.SMTP_SECURE, readPort(env.SMTP_PORT, 465) === 465),
+      configured: Boolean(readOptionalEnv(env, 'EMAIL_PASS')),
     },
     email: {
       user: emailUser,
