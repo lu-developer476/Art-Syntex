@@ -161,7 +161,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   : 'pointer-events-none -translate-y-2 scale-95 opacity-0',
               ].join(' ')}
             >
-              <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">{t('menuPanelTitle')}</p>
               <ul className="grid gap-1">
                 {menuItems.map((item) => {
                   const isActive = location.pathname === item.to
@@ -237,8 +236,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <main className="flex-1">{children}</main>
       </I18nProvider>
 
-      <footer className="mt-8 border-t border-purple-500/40 pt-4 text-center text-[9px] leading-relaxed tracking-wide text-purple-200 sm:text-[10px] md:text-xs">
-        <div className="flex flex-col items-center gap-1">
+      <footer className="mt-6 border-t border-purple-500/40 pt-3 text-center text-[9px] leading-relaxed tracking-wide text-purple-200 sm:text-[10px] md:text-xs">
+        <div className="flex flex-col items-center gap-0.5">
           <p className="max-w-3xl text-[8px] font-medium uppercase leading-relaxed tracking-[0.12em] text-purple-300/80 sm:text-[9px] md:max-w-none md:whitespace-nowrap md:text-[10px]">
             {t('footerDescription')}
           </p>
