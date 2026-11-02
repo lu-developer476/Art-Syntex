@@ -409,4 +409,10 @@ El documento es una **orden de compra pendiente**, no una factura fiscal ni un c
 
 ### Costos y límites del plan gratuito
 
-Netlify Free tiene un límite mensual duro de créditos. Al agotarse, puede pausar sitios del mismo equipo hasta el siguiente ciclo; no se activa una recarga automática ni un upgrade desde este proyecto. Como los créditos se comparten dentro del equipo de Netlify, la API podría consumir parte del margen disponible para tus otros sitios. Comprobá el uso actual de la cuenta antes de agregarla. No se ha conectado ni desplegado ningún sitio desde este cambio.
+La API puede ejecutarse en **Netlify Free ($0)**, sin contratar Personal/Pro ni activar recargas. El plan Free publica actualmente un límite duro de **300 créditos mensuales**. Al agotarse, Netlify pausa los sitios del equipo hasta el siguiente ciclo: no genera cargos por excedente ni permite recargar créditos en Free. Los valores y condiciones pueden cambiar; revisar la [página oficial de precios](https://www.netlify.com/pricing/) antes de crear el sitio.
+
+**Aislamiento recomendado:** crear un equipo Free independiente para Art-Syntex y alojar allí únicamente esta API. Netlify comparte el límite entre todos los sitios de un mismo equipo; si se usa el equipo donde están otros proyectos, agotar los créditos podría pausarlos también. No conectar ni mover los otros proyectos. No agregar tarjeta, no cambiar a un plan pago y mantener cualquier opción de recarga automática desactivada.
+
+Firebase Hosting sigue siendo el hosting público del frontend. Netlify se utiliza exclusivamente para ejecutar funciones serverless de correo y checkout bajo demanda; no se levanta un Cloud Server permanente ni se traslada la aplicación.
+
+La URL de la API se configura en `VITE_API_BASE_URL` cuando el endpoint esté desplegado. Ese valor es opcional para compilar y publicar el frontend en Firebase: si falta, Firebase Hosting puede seguir desplegándose, pero los correos transaccionales y el checkout con PDF no estarán disponibles hasta conectar la API.
