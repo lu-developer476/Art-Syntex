@@ -1,5 +1,12 @@
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-const apiBaseUrl = (configuredApiBaseUrl || (import.meta.env.DEV ? 'http://localhost:3001' : '')).replace(/\/$/, '')
+export function resolveApiBaseUrl(configuredUrl: string | undefined, isDevelopment: boolean): string {
+  const fallback = isDevelopment ? 'http://localhost:3001' : ''
+  return (configuredUrl?.trim() || fallback).replace(/\/$/, '')
+}
+
+const apiBaseUrl = resolveApiBaseUrl(
+  import.meta.env.VITE_API_BASE_URL,
+  import.meta.env.DEV,
+)
 
 interface ApiOptions {
   path: string
