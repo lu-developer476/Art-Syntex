@@ -49,6 +49,7 @@ export function getConfig(env = process.env) {
       user: emailUser,
       pass: readOptionalEnv(env, 'EMAIL_PASS'),
       receiver: contactReceiver,
+      orderReceiver: readOptionalEnv(env, 'ORDER_RECEIVER_EMAIL', contactReceiver),
       contactFrom: readOptionalEnv(env, 'CONTACT_FROM', emailUser),
       contactReplyTo: readOptionalEnv(env, 'CONTACT_REPLY_TO', contactReceiver),
       newsletterFrom: readOptionalEnv(env, 'NEWSLETTER_FROM', emailUser),
