@@ -55,28 +55,21 @@ Capacidades implementadas:
 
 ### Backend
 
-Servicio opcional ubicado en `server/` con:
+La lógica de negocio y los servicios reutilizables están en `server/`. En producción se ejecutan mediante **Netlify Functions**, bajo demanda y sin un proceso Express permanente. Express se conserva para desarrollo local y pruebas.
 
-- **Express 4**
-- **CORS** configurable por origen
-- **Nodemailer** con SMTP configurable (Gmail por defecto y preparado para proveedor transaccional)
-- Validación y sanitización de payloads
-- Rate limiting en middleware reutilizable
-- Endpoint de salud (`GET /health`)
-- Manejo centralizado de errores HTTP
-- Configuración centralizada de entorno
-- Controllers y routes separados por responsabilidad
-- Servicio de email aislado de Express
-- Endpoints de correo:
-  - `POST /contact`
-  - `POST /newsletter/subscribe`
-  - `POST /registration-notice`
+- **Netlify Functions** para los endpoints productivos.
+- **Express 4** para desarrollo local.
+- **Nodemailer** con SMTP configurable (Gmail por defecto).
+- Validación, sanitización, CORS y rate limiting por ruta.
+- Firebase Admin para gestionar el newsletter y validar el checkout en el servidor.
+- Endpoints: `GET /health`, `POST /contact`, `POST /newsletter/subscribe`, `POST /registration-notice` y `POST /checkout`.
 
-El backend procesa tres flujos transaccionales:
+Flujos transaccionales:
 
-- Notificación de contacto al destinatario configurado y confirmación automática al remitente.
-- Alta de newsletter en Firestore Admin y envío de un correo de bienvenida. El envío queda registrado para evitar repetirlo en cada reintento.
-- Correo complementario de onboarding para guiar la validación de cuenta registrada en Firebase Authentication.
+- Contacto: notificación interna y confirmación automática al remitente.
+- Newsletter: alta en Firestore y bienvenida sin duplicar envíos.
+- Registro: correo complementario para orientar la verificación de Firebase Authentication.
+- Checkout: validación de identidad y productos, creación de la orden en Firestore, generación del PDF y envío de copias al comprador y al buzón interno.
 
 ### Calidad
 
@@ -113,9 +106,9 @@ El repositorio incluye una capa de calidad con:
 
 ### Hosting
 
-La SPA está preparada para desplegarse en **Firebase Hosting**, publicando la carpeta `dist` y resolviendo todas las rutas al `index.html` de Vite.
+La SPA permanece en **Firebase Hosting**, publicando `dist/`. La API se despliega como un sitio Netlify independiente conectado al mismo repositorio y a `main`. El archivo `netlify.toml` configura ese sitio para publicar únicamente `netlify-public/` y desplegar `netlify/functions/api.mjs`; no mueve el frontend ni reemplaza Firebase Hosting.
 
-El workflow de Firebase despliega la SPA y las reglas de Firestore; **no despliega el servicio Express**. El backend debe ejecutarse como servicio web independiente (el repositorio incluye un `Dockerfile` para ese servicio), con sus credenciales privadas configuradas en el proveedor. En producción, la URL pública del servicio debe guardarse como secreto de GitHub `VITE_API_BASE_URL` para incorporarse al build del frontend.
+En producción, la URL HTTPS del sitio Netlify debe guardarse en el secreto de GitHub `VITE_API_BASE_URL`. El workflow de Firebase incorpora esa URL al build del frontend. No se necesita un servidor Express permanente ni Cloud Functions de Firebase.
 
 ### Reglas e índices
 
@@ -144,15 +137,13 @@ Frontend SPA (React + Vite)
         |-- Cloud Firestore
         \-- Firebase Hosting
 
-Servicio de correo (Node.js)
+API serverless (Netlify Functions)
         |
-        |-- app.js                 Composición de Express
-        |-- config/env.js          Configuración de entorno
-        |-- routes/                Entrada HTTP
-        |-- controllers/           Orquestación de requests
-        |-- services/              Integraciones externas
-        |-- middleware/            Rate limit + errores
-        \-- core/errors.js         Errores de aplicación
+        |-- netlify/functions/api.mjs
+        |-- server/config/          Configuración SMTP
+        |-- server/validation.js    Validación de payloads
+        |-- server/services/        Firebase Admin, email y checkout PDF
+        \-- server/app.js           Express para desarrollo local
 
 Quality layer
         |
@@ -223,7 +214,7 @@ Variable opcional:
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
-`VITE_API_BASE_URL` define la URL pública de la API consumida por el frontend para `/contact`, `/newsletter/subscribe` y `/registration-notice`. `http://localhost:3001` se usa únicamente en desarrollo local. En producción, la variable debe contener la URL pública del backend; si falta, los datos se guardan en Firestore cuando corresponde, pero no se envían correos.
+`VITE_API_BASE_URL` define la URL HTTPS del sitio Netlify que publica la API para `/contact`, `/newsletter/subscribe`, `/registration-notice` y `/checkout`. `http://localhost:3001` se usa únicamente con Express en desarrollo local. En producción, si la URL falta, los formularios conservan el guardado en Firestore cuando corresponde, pero no envían correos ni permiten iniciar un nuevo checkout desde la API.
 
 ### Backend
 
@@ -236,6 +227,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_SECURE=true
 CONTACT_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
+ORDER_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
 CONTACT_FROM=lucasmontenegroburgos@gmail.com
 CONTACT_REPLY_TO=lucasmontenegroburgos@gmail.com
 NEWSLETTER_FROM=lucasmontenegroburgos@gmail.com
@@ -250,7 +242,7 @@ Descripción:
 - `EMAIL_USER` y `EMAIL_PASS`: credenciales SMTP. Para Gmail, `EMAIL_PASS` debe ser una contraseña de aplicación; nunca se guarda en el repositorio.
 - `SMTP_HOST`, `SMTP_PORT` y `SMTP_SECURE`: servidor, puerto y modo TLS del proveedor de correo. El valor predeterminado corresponde a Gmail SMTP.
 - `CONTACT_FROM`: remitente de los avisos y confirmaciones del formulario.
-- `CONTACT_RECEIVER_EMAIL`: casilla que recibe los mensajes del formulario.
+- `CONTACT_RECEIVER_EMAIL`: casilla que recibe los mensajes del formulario.\n- `ORDER_RECEIVER_EMAIL`: casilla interna que recibe las órdenes de compra PDF.
 - `CONTACT_REPLY_TO`: destino de respuesta para la confirmación enviada al cliente.
 - `NEWSLETTER_FROM`: remitente independiente para las bienvenidas del newsletter.
 - `REGISTRATION_FROM`: remitente para los avisos de registro.
@@ -258,7 +250,7 @@ Descripción:
 - `APP_BASE_URL`: URL pública usada en los enlaces de los correos.
 - `PORT`: puerto de escucha de Express; por defecto `3001`.
 
-Si no se declara `EMAIL_USER`, el backend utiliza `lucasmontenegroburgos@gmail.com`. `EMAIL_PASS` y las credenciales de Firebase Admin sí son necesarias para iniciar el servicio.
+Si no se declara `EMAIL_USER`, el backend utiliza `lucasmontenegroburgos@gmail.com`. `EMAIL_PASS` y las credenciales de Firebase Admin deben cargarse como variables privadas en el sitio Netlify. La API de checkout puede crear la orden y el PDF aunque el SMTP todavía no esté configurado; en ese caso no envía correos.
 
 #### Migración futura a un dominio propio
 
@@ -365,3 +357,55 @@ npm run firebase:deploy:hosting
 - El rate limit del servicio Express utiliza almacenamiento en memoria; para despliegues horizontales conviene reemplazarlo por un store externo.
 - El backend separa configuración, routing, controllers, servicios, middleware y errores para mantener las responsabilidades aisladas.
 - La colección `mail` figura en las reglas de Firestore, pero no existe escritura activa hacia esa colección dentro del código actual.
+
+
+## API serverless y órdenes de compra PDF
+
+La API se ejecuta en un **sitio Netlify propio para Art-Syntex**, independiente del hosting frontend. Conectá el repositorio `lu-developer476/Art-Syntex` a un sitio nuevo, elegí la rama `main` y dejá que Netlify lea `netlify.toml`. No cambies el sitio de Firebase Hosting ni los otros proyectos.
+
+### Variables privadas del sitio Netlify
+
+Configurá estas variables en la configuración del sitio Netlify (no en GitHub ni en archivos versionados):
+
+```env
+EMAIL_USER=lucasmontenegroburgos@gmail.com
+EMAIL_PASS=CONTRASENA_DE_APLICACION_DE_GOOGLE
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+CONTACT_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
+ORDER_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
+CONTACT_FROM=lucasmontenegroburgos@gmail.com
+CONTACT_REPLY_TO=lucasmontenegroburgos@gmail.com
+NEWSLETTER_FROM=lucasmontenegroburgos@gmail.com
+REGISTRATION_FROM=lucasmontenegroburgos@gmail.com
+FIREBASE_ADMIN_PROJECT_ID=art-synt-13037
+FIREBASE_ADMIN_CLIENT_EMAIL=CUENTA_DE_SERVICIO_FIREBASE
+FIREBASE_ADMIN_PRIVATE_KEY=CLAVE_PRIVADA_DE_LA_CUENTA_DE_SERVICIO
+APP_BASE_URL=https://TU-DOMINIO-FIREBASE
+ALLOWED_ORIGINS=https://TU-DOMINIO-FIREBASE,https://TU-DOMINIO-FIREBASE-ALTERNATIVO
+```
+
+- `EMAIL_PASS` debe ser una contraseña de aplicación de Google, nunca la contraseña normal de la cuenta.
+- La cuenta de servicio debe pertenecer al proyecto `art-synt-13037` y tener acceso a Firestore. La clave privada se pega con los saltos de línea reales o escapados como `\\n`, según el panel de variables.
+- Reemplazá los dos dominios de ejemplo por los orígenes reales de Firebase Hosting que use el proyecto. `ALLOWED_ORIGINS` debe contener cada origen completo, separados por coma.
+- No cargues el contenido de la cuenta de servicio, la contraseña SMTP ni ninguna clave en el repositorio.
+
+### Conectar el frontend con la API
+
+En los secretos del repositorio GitHub, configurá `VITE_API_BASE_URL` con la URL HTTPS del sitio Netlify, por ejemplo `https://art-syntex-api.netlify.app`. El workflow existente de Firebase ya consume ese secreto al compilar la SPA. El nombre del sitio es a elección y debe coincidir con la URL que cree Netlify.
+
+### Qué hace el checkout
+
+1. El frontend envía los identificadores y cantidades del carrito junto con el token de Firebase Authentication.
+2. La API verifica el token y exige que el correo esté verificado.
+3. Los precios se vuelven a leer desde Firestore; no se confía en los importes enviados por el navegador.
+4. La orden se guarda en `purchaseOrders` como `pending` / `unpaid`.
+5. El backend genera un PDF con número de orden, cliente, productos, cantidades, precios unitarios y total.
+6. El navegador descarga el PDF y la API adjunta el mismo archivo al correo del comprador y al buzón interno.
+
+El documento es una **orden de compra pendiente**, no una factura fiscal ni un comprobante de pago. El checkout actual no procesa pagos. La generación de PDF y el guardado de la orden son independientes del SMTP: si Gmail no está disponible, la orden y el archivo se siguen generando, aunque no puedan llegar los correos.
+
+### Costos y límites del plan gratuito
+
+Netlify Free tiene un límite mensual duro de créditos. Al agotarse, puede pausar sitios del mismo equipo hasta el siguiente ciclo; no se activa una recarga automática ni un upgrade desde este proyecto. Como los créditos se comparten dentro del equipo de Netlify, la API podría consumir parte del margen disponible para tus otros sitios. Comprobá el uso actual de la cuenta antes de agregarla. No se ha conectado ni desplegado ningún sitio desde este cambio.
