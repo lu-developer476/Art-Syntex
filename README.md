@@ -12,7 +12,7 @@
 ![Nodemailer](https://img.shields.io/badge/Nodemailer-009688?style=for-the-badge)
 ![CORS](https://img.shields.io/badge/CORS-283593?style=for-the-badge)
 
-Art-Syntex (A/S Nexus) es una SPA orientada a catálogo, autenticación de usuarios y checkout básico. El frontend está construido con React + Vite y utiliza Firebase para autenticación, persistencia y despliegue. El repositorio también incluye una API serverless para correo y checkout con Netlify Functions; Express queda disponible para desarrollo local y pruebas, sin requerir un servidor permanente.
+Art-Syntex (A/S Nexus) es una SPA orientada a catálogo, autenticación de usuarios y checkout básico. El frontend está construido con React + Vite y utiliza Firebase para autenticación, persistencia y hosting. El backend HTTP de correo y checkout pertenece al mismo proyecto Art-Syntex y se conecta mediante `VITE_API_BASE_URL`. No requiere contratar ni incorporar otro proveedor.
 
 ## Estado actual del proyecto
 
@@ -55,14 +55,14 @@ Capacidades implementadas:
 
 ### Backend
 
-La lógica de negocio y los servicios reutilizables están en `server/`. En producción se ejecutan mediante **Netlify Functions**, bajo demanda y sin un proceso Express permanente. Express se conserva para desarrollo local y pruebas.
+La lógica de negocio y los servicios reutilizables están en `server/`. El servicio expone una API HTTP para correo y checkout; Express permite ejecutar el mismo backend localmente y el `Dockerfile` conserva el empaquetado del runtime.
 
-- **Netlify Functions** para los endpoints productivos.
-- **Express 4** para desarrollo local.
+- **Express 4** para la API HTTP.
 - **Nodemailer** con SMTP configurable (Gmail por defecto).
 - Validación, sanitización, CORS y rate limiting por ruta.
-- Firebase Admin para gestionar el newsletter y validar el checkout en el servidor.
+- Firebase Admin para verificar tokens, consultar el catálogo y registrar órdenes en Firestore.
 - Endpoints: `GET /health`, `POST /contact`, `POST /newsletter/subscribe`, `POST /registration-notice` y `POST /checkout`.
+- `netlify/functions/api.mjs` se conserva como adaptador alternativo y para pruebas; no es un requisito para desplegar el backend en Firebase.
 
 Flujos transaccionales:
 
@@ -70,6 +70,7 @@ Flujos transaccionales:
 - Newsletter: alta en Firestore y bienvenida sin duplicar envíos.
 - Registro: correo complementario para orientar la verificación de Firebase Authentication.
 - Checkout: validación de identidad y productos, creación de la orden en Firestore, generación del PDF y envío de copias al comprador y al buzón interno.
+- Si SMTP no está configurado o no responde, la orden y el PDF se conservan; la respuesta informa que los correos no se entregaron.
 
 ### Calidad
 
@@ -104,11 +105,11 @@ El repositorio incluye una capa de calidad con:
 - `newsletterSubscribers`: direcciones suscritas, consentimiento y estado del correo de bienvenida
 - `notifications`: eventos operativos internos
 
-### Hosting
+### Hosting y API
 
-La SPA permanece en **Firebase Hosting**, publicando `dist/`. La API se despliega como un sitio Netlify independiente conectado al mismo repositorio y a `main`. El archivo `netlify.toml` configura ese sitio para publicar únicamente `netlify-public/` y desplegar `netlify/functions/api.mjs`; no mueve el frontend ni reemplaza Firebase Hosting.
+La SPA se publica en **Firebase Hosting**, usando `dist/`. El backend HTTP se mantiene dentro del proyecto Art-Syntex en Firebase y expone su propia URL HTTPS. El frontend recibe esa URL mediante `VITE_API_BASE_URL`, configurada en las variables del entorno de build.
 
-En producción, la URL HTTPS del sitio Netlify debe guardarse en el secreto de GitHub `VITE_API_BASE_URL`. El workflow de Firebase incorpora esa URL al build del frontend. No se necesita un servidor Express permanente ni Cloud Functions de Firebase.
+El workflow `.github/workflows/deploy-firebase-hosting.yml` publica el frontend y las reglas de Firestore. No crea servicios, activa facturación ni incorpora proveedores externos. El despliegue del runtime del backend se gestiona desde el recurso Firebase donde ya está alojado.
 
 ### Reglas e índices
 
@@ -214,7 +215,7 @@ Variable opcional:
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
-`VITE_API_BASE_URL` define la URL HTTPS del sitio Netlify que publica la API para `/contact`, `/newsletter/subscribe`, `/registration-notice` y `/checkout`. `http://localhost:3001` se usa únicamente con Express en desarrollo local. En producción, si la URL falta, los formularios conservan el guardado en Firestore cuando corresponde, pero no envían correos ni permiten iniciar un nuevo checkout desde la API.
+`VITE_API_BASE_URL` define la URL HTTPS del backend de Art-Syntex para `/contact`, `/newsletter/subscribe`, `/registration-notice` y `/checkout`. `http://localhost:3001` se usa únicamente con Express en desarrollo local. En producción, si la URL falta, los formularios que dependen de la API y el checkout no podrán completarse.
 
 ### Backend
 
@@ -250,7 +251,7 @@ Descripción:
 - `APP_BASE_URL`: URL pública usada en los enlaces de los correos.
 - `PORT`: puerto de escucha de Express; por defecto `3001`.
 
-Si no se declara `EMAIL_USER`, el backend utiliza `lucasmontenegroburgos@gmail.com`. `EMAIL_PASS` y las credenciales de Firebase Admin deben cargarse como variables privadas en el sitio Netlify. La API de checkout puede crear la orden y el PDF aunque el SMTP todavía no esté configurado; en ese caso no envía correos.
+Si no se declara `EMAIL_USER`, el backend utiliza `lucasmontenegroburgos@gmail.com`. Las credenciales de Firebase Admin son necesarias para las operaciones autenticadas. `EMAIL_PASS` es opcional: sin SMTP, la API sigue registrando órdenes y generando el PDF, pero marca los correos como no entregados.
 
 #### Migración futura a un dominio propio
 
@@ -360,41 +361,22 @@ npm run firebase:deploy:hosting
 - La colección `mail` figura en las reglas de Firestore, pero no existe escritura activa hacia esa colección dentro del código actual.
 
 
-## API serverless y órdenes de compra PDF
+## API y órdenes de compra PDF
 
-La API se ejecuta en un **sitio Netlify propio para Art-Syntex**, independiente del hosting frontend. Conectá el repositorio `lu-developer476/Art-Syntex` a un sitio nuevo, elegí la rama `main` y dejá que Netlify lea `netlify.toml`. No cambies el sitio de Firebase Hosting ni los otros proyectos.
+### Configuración
 
-### Variables privadas del sitio Netlify
+El frontend debe compilarse con `VITE_API_BASE_URL` apuntando al endpoint HTTPS del backend que ya está desplegado para Art-Syntex en Firebase. Para desarrollo local, usar `http://localhost:3001` e iniciar Express con `npm run server`.
 
-Configurá estas variables en la configuración del sitio Netlify (no en GitHub ni en archivos versionados):
+Variables privadas del backend:
 
-```env
-EMAIL_USER=lucasmontenegroburgos@gmail.com
-EMAIL_PASS=CONTRASENA_DE_APLICACION_DE_GOOGLE
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_SECURE=true
-CONTACT_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
-ORDER_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
-CONTACT_FROM=lucasmontenegroburgos@gmail.com
-CONTACT_REPLY_TO=lucasmontenegroburgos@gmail.com
-NEWSLETTER_FROM=lucasmontenegroburgos@gmail.com
-REGISTRATION_FROM=lucasmontenegroburgos@gmail.com
-FIREBASE_ADMIN_PROJECT_ID=art-synt-13037
-FIREBASE_ADMIN_CLIENT_EMAIL=CUENTA_DE_SERVICIO_FIREBASE
-FIREBASE_ADMIN_PRIVATE_KEY=CLAVE_PRIVADA_DE_LA_CUENTA_DE_SERVICIO
-APP_BASE_URL=https://TU-DOMINIO-FIREBASE
-ALLOWED_ORIGINS=https://TU-DOMINIO-FIREBASE,https://TU-DOMINIO-FIREBASE-ALTERNATIVO
-```
+- `FIREBASE_ADMIN_PROJECT_ID`
+- `FIREBASE_ADMIN_CLIENT_EMAIL`
+- `FIREBASE_ADMIN_PRIVATE_KEY`
+- `EMAIL_PASS` (opcional; contraseña de aplicación de Gmail si se habilita SMTP)
+- `ALLOWED_ORIGINS` con el origen de Firebase Hosting
+- `APP_BASE_URL` con la URL pública de Art-Syntex
 
-- `EMAIL_PASS` debe ser una contraseña de aplicación de Google, nunca la contraseña normal de la cuenta.
-- La cuenta de servicio debe pertenecer al proyecto `art-synt-13037` y tener acceso a Firestore. La clave privada se pega con los saltos de línea reales o escapados como `\\n`, según el panel de variables.
-- Reemplazá los dos dominios de ejemplo por los orígenes reales de Firebase Hosting que use el proyecto. `ALLOWED_ORIGINS` debe contener cada origen completo, separados por coma.
-- No cargues el contenido de la cuenta de servicio, la contraseña SMTP ni ninguna clave en el repositorio.
-
-### Conectar el frontend con la API
-
-En los secretos del repositorio GitHub, configurá `VITE_API_BASE_URL` con la URL HTTPS del sitio Netlify, por ejemplo `https://art-syntex-api.netlify.app`. El workflow existente de Firebase ya consume ese secreto al compilar la SPA. El nombre del sitio es a elección y debe coincidir con la URL que cree Netlify.
+No hay que crear un sitio Netlify, contratar un plan externo ni desplegar otro servidor para seguir el flujo existente.
 
 ### Qué hace el checkout
 
@@ -402,17 +384,7 @@ En los secretos del repositorio GitHub, configurá `VITE_API_BASE_URL` con la UR
 2. La API verifica el token y exige que el correo esté verificado.
 3. Los precios se vuelven a leer desde Firestore; no se confía en los importes enviados por el navegador.
 4. La orden se guarda en `purchaseOrders` como `pending` / `unpaid`.
-5. El backend genera un PDF con número de orden, cliente, productos, cantidades, precios unitarios y total.
-6. El navegador descarga el PDF y la API adjunta el mismo archivo al correo del comprador y al buzón interno.
+5. El backend genera un PDF con número de orden, fecha, cliente, productos, cantidades, precios unitarios y total.
+6. El navegador descarga el PDF y, cuando SMTP está disponible, la API adjunta el mismo archivo al correo del comprador y al buzón interno.
 
-El documento es una **orden de compra pendiente**, no una factura fiscal ni un comprobante de pago. El checkout actual no procesa pagos. La generación de PDF y el guardado de la orden son independientes del SMTP: si Gmail no está disponible, la orden y el archivo se siguen generando, aunque no puedan llegar los correos.
-
-### Costos y límites del plan gratuito
-
-La API puede ejecutarse en **Netlify Free ($0)**, sin contratar Personal/Pro ni activar recargas. El plan Free publica actualmente un límite duro de **300 créditos mensuales**. Al agotarse, Netlify pausa los sitios del equipo hasta el siguiente ciclo: no genera cargos por excedente ni permite recargar créditos en Free. Los valores y condiciones pueden cambiar; revisar la [página oficial de precios](https://www.netlify.com/pricing/) antes de crear el sitio.
-
-**Aislamiento recomendado:** crear un equipo Free independiente para Art-Syntex y alojar allí únicamente esta API. Netlify comparte el límite entre todos los sitios de un mismo equipo; si se usa el equipo donde están otros proyectos, agotar los créditos podría pausarlos también. No conectar ni mover los otros proyectos. No agregar tarjeta, no cambiar a un plan pago y mantener cualquier opción de recarga automática desactivada.
-
-Firebase Hosting sigue siendo el hosting público del frontend. Netlify se utiliza exclusivamente para ejecutar funciones serverless de correo y checkout bajo demanda; no se levanta un Cloud Server permanente ni se traslada la aplicación.
-
-La URL de la API se configura en `VITE_API_BASE_URL` cuando el endpoint esté desplegado. Ese valor es opcional para compilar y publicar el frontend en Firebase: si falta, Firebase Hosting puede seguir desplegándose, pero los correos transaccionales y el checkout con PDF no estarán disponibles hasta conectar la API.
+El documento es una **orden de compra pendiente**, no una factura fiscal ni un comprobante de pago. El checkout actual no procesa pagos. La generación del PDF y el guardado de la orden son independientes del SMTP: si el proveedor de correo no está configurado o no responde, la orden y el PDF se siguen generando y la respuesta informa el estado de entrega de cada correo.
