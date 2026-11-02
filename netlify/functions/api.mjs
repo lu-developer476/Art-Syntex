@@ -36,7 +36,7 @@ function getRequestId(context) {
 
 function getCorsHeaders(origin) {
   const allowedOrigins = getConfig().cors.allowedOrigins
-  const isAllowed = !origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)
+  const isAllowed = !origin || allowedOrigins.includes(origin) || (allowedOrigins.length === 0 && origin === 'http://localhost:5173')
   if (!isAllowed) return null
 
   return {
