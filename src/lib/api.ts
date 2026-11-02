@@ -1,4 +1,5 @@
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001').replace(/\/$/, '')
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+const apiBaseUrl = (configuredApiBaseUrl || (import.meta.env.DEV ? 'http://localhost:3001' : '')).replace(/\/$/, '')
 
 interface ApiOptions {
   path: string
@@ -6,6 +7,10 @@ interface ApiOptions {
 }
 
 export async function postMailService({ path, payload }: ApiOptions): Promise<Record<string, unknown>> {
+  if (!apiBaseUrl) {
+    throw new Error('El servicio de correo no tiene una URL pública configurada.')
+  }
+
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: 'POST',
     headers: {
