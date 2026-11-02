@@ -1,5 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { postMailService } from './api'
+import { postMailService, resolveApiBaseUrl } from './api'
+
+describe('resolveApiBaseUrl', () => {
+  it('uses localhost only for local development', () => {
+    expect(resolveApiBaseUrl(undefined, true)).toBe('http://localhost:3001')
+    expect(resolveApiBaseUrl(undefined, false)).toBe('')
+  })
+
+  it('uses the configured public API URL in every environment', () => {
+    expect(resolveApiBaseUrl(' https://api.example.com/ ', false)).toBe('https://api.example.com')
+    expect(resolveApiBaseUrl('https://api.example.com', true)).toBe('https://api.example.com')
+  })
+})
 
 describe('postMailService', () => {
   afterEach(() => {
