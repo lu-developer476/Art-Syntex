@@ -66,6 +66,14 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Deploy Firestore security rules
+        run: |
+          service_account_file="$RUNNER_TEMP/firebase-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$service_account_file"
+          chmod 600 "$service_account_file"
+          export GOOGLE_APPLICATION_CREDENTIALS="$service_account_file"
+          npx --yes firebase-tools deploy --only firestore:rules --project "$FIREBASE_DEPLOY_PROJECT_ID" --non-interactive
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
