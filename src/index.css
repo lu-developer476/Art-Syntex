@@ -269,3 +269,29 @@ body::before {
   background-color: rgba(126, 34, 206, 0.18) !important;
   color: #2e1065 !important;
 }
+
+
+/* El pie mantiene su contraste en ambos temas y no hereda tarjetas de contenido. */
+#root footer {
+  color: #e9d5ff;
+}
+
+:root[data-theme='light'] #root footer {
+  border-color: rgba(126, 34, 206, 0.28) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #2e1065;
+  box-shadow: 0 18px 50px rgba(88, 28, 135, 0.12) !important;
+}
+
+:root[data-theme='light'] #root footer h2,
+:root[data-theme='light'] #root footer .text-purple-100,
+:root[data-theme='light'] #root footer .text-purple-200\/75,
+:root[data-theme='light'] #root footer .text-purple-300\/65,
+:root[data-theme='light'] #root footer .text-purple-300\/60 {
+  color: #3b0764;
+}
+
+:root[data-theme='light'] #root footer .text-cyan-200,
+:root[data-theme='light'] #root footer .text-cyan-100 {
+  color: #6b21a8;
+}
