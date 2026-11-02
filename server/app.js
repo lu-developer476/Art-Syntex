@@ -1,9 +1,11 @@
 import cors from 'cors'
 import express from 'express'
 import { createContactRouter } from './routes/contact.js'
+import { createNewsletterRouter } from './routes/newsletter.js'
 import { createRegistrationRouter } from './routes/registration.js'
 import { createCheckoutRouter } from './routes/checkout.js'
 import { createEmailService } from './services/emailService.js'
+import { createNewsletterService } from './services/newsletterService.js'
 import { createCheckoutService } from './services/checkoutService.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestGuards } from './middleware/requestGuards.js'
@@ -21,10 +23,12 @@ function normalizeAllowedOrigins(corsConfig = {}) {
 export function createApp(config, dependencies = {}) {
   const app = express()
   const emailService = dependencies.emailService ?? createEmailService(config)
+  const newsletterService = dependencies.newsletterService ?? createNewsletterService(emailService, dependencies.adminServices)
   const checkoutService = dependencies.checkoutService ?? createCheckoutService(dependencies.adminServices)
   const allowedOrigins = normalizeAllowedOrigins(config.cors)
 
   app.locals.emailService = emailService
+  app.locals.newsletterService = newsletterService
   app.locals.checkoutService = checkoutService
 
   app.disable('x-powered-by')
@@ -54,6 +58,7 @@ export function createApp(config, dependencies = {}) {
   })
 
   app.use('/contact', createContactRouter(emailService))
+  app.use('/newsletter', createNewsletterRouter(newsletterService))
   app.use('/registration-notice', createRegistrationRouter(emailService))
   app.use('/checkout', createCheckoutRouter(checkoutService, dependencies.adminServices))
 
