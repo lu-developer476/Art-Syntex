@@ -242,11 +242,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
       <footer className="mt-12 border-t border-purple-500/40 pt-6 text-center text-xs leading-relaxed tracking-wide text-purple-200 md:text-sm">
         <div className="flex flex-col items-center gap-2">
-          <p>
-            <span className="text-cyber-gold">©</span> {new Date().getFullYear()} {t('rights')} • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
-          </p>
           <p className="max-w-3xl text-[10px] font-medium uppercase leading-relaxed tracking-[0.14em] text-purple-300/80 md:text-xs">
             {t('footerDescription')}
+          </p>
+          <p>
+            <span className="text-cyber-gold">©</span> {new Date().getFullYear()} {t('rights')} • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
           </p>
         </div>
       </footer>
