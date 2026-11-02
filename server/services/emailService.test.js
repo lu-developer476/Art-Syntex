@@ -70,4 +70,52 @@ describe('email service sender configuration', () => {
     expect(transporter.sendMail.mock.calls[0][0].html).not.toContain('<script>')
     expect(transporter.sendMail.mock.calls[0][0].html).toContain('&lt;script&gt;')
   })
+
+  it('attaches the purchase order PDF to both internal and customer emails', async () => {
+    const pdfBuffer = Buffer.from('%PDF-1.4 test document')
+    const transporter = { sendMail: vi.fn().mockResolvedValue({ messageId: 'order-message' }) }
+    const service = createEmailService({
+      email: {
+        user: 'lucasmontenegroburgos@gmail.com',
+        pass: 'app-password',
+        receiver: 'contact@example.com',
+        orderReceiver: 'orders@example.com',
+        contactFrom: 'lucasmontenegroburgos@gmail.com',
+        contactReplyTo: 'contact@example.com',
+      },
+      appBaseUrl: 'https://art-syntex.example',
+    }, transporter)
+
+    const result = await service.sendPurchaseOrderEmails({
+      order: {
+        orderId: 'AS-ORDER-001',
+        customerName: 'Cliente',
+        customerEmail: 'buyer@example.com',
+        items: [{ name: 'Implante', quantity: 2, unitPrice: 50, lineTotal: 100 }],
+        total: 100,
+      },
+      pdfBuffer,
+      fileName: 'orden-de-compra-AS-ORDER-001.pdf',
+    })
+
+    expect(result).toEqual({ internal: true, customer: true })
+    expect(transporter.sendMail).toHaveBeenCalledTimes(2)
+    expect(transporter.sendMail.mock.calls[0][0]).toMatchObject({
+      to: 'orders@example.com',
+      attachments: [{
+        filename: 'orden-de-compra-AS-ORDER-001.pdf',
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      }],
+    })
+    expect(transporter.sendMail.mock.calls[1][0]).toMatchObject({
+      to: 'buyer@example.com',
+      attachments: [{
+        filename: 'orden-de-compra-AS-ORDER-001.pdf',
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      }],
+    })
+  })
+
 })
