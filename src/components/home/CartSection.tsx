@@ -134,7 +134,7 @@ export default function CartSection({
           {!user ? (
             <p className="mt-3 text-sm text-purple-300">Ingresar a la red para completar el checkout.</p>
           ) : null}
-          {message ? <p className="mt-3 text-sm text-purple-200">{message}</p> : null}
+          {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
         </div>
       </aside>
     </>

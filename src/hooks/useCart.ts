@@ -100,12 +100,14 @@ export function useCart() {
       }
 
       setCart([])
-      setIsCartOpen(false)
 
+      // Keep the cart drawer open so the customer can actually read the order result.
       if (pdfDownloaded && result.emailDelivery?.customer) {
         setPurchaseMessage(t('purchaseOrderReady'))
       } else if (pdfDownloaded) {
         setPurchaseMessage(t('purchaseOrderEmailPending'))
+      } else if (result.emailDelivery?.customer) {
+        setPurchaseMessage(t('purchaseOrderPdfPendingEmailSent'))
       } else {
         setPurchaseMessage(t('purchaseOrderPdfPending'))
       }
