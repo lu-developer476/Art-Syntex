@@ -1,5 +1,6 @@
 import { FieldValue } from 'firebase-admin/firestore'
 import { getAdminServices } from './firebaseAdmin.js'
+import { fallbackCatalog } from '../data/catalog.js'
 
 const MAX_QUANTITY = 20
 const MAX_ITEMS = 50
@@ -51,19 +52,27 @@ export function createCheckoutService(services) {
     }
 
     const normalizedItems = validateItems(items)
-    const productRefs = normalizedItems.map(([productId]) => db.collection('products').doc(productId))
-    const snapshots = await db.getAll(...productRefs)
-    const products = new Map(snapshots.map((snapshot) => [snapshot.id, snapshot]))
+    const catalogSnapshot = await db.collection('products').get()
+    const products = new Map(catalogSnapshot.docs.map((snapshot) => {
+      const data = snapshot.data()
+      const productId = typeof data.id === 'string' ? data.id : snapshot.id
+      return [productId, data]
+    }))
+
+    // The UI uses the same local demo seed when the Firestore catalog has not been seeded yet.
+    // Keep checkout available in that state, but prefer Firestore prices whenever documents exist.
+    if (catalogSnapshot.empty) {
+      for (const product of fallbackCatalog) products.set(product.id, product)
+    }
 
     const lines = normalizedItems.map(([productId, quantity]) => {
-      const snapshot = products.get(productId)
-      if (!snapshot?.exists) {
+      const product = products.get(productId)
+      if (!product) {
         const error = new Error('Product ' + productId + ' is unavailable.')
         error.statusCode = 409
         throw error
       }
 
-      const product = snapshot.data()
       const unitPrice = Number(product.price)
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
         const error = new Error('Product ' + productId + ' has an invalid price.')
