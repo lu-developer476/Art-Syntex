@@ -21,6 +21,7 @@ describe('Express application', () => {
       sendContactEmails: vi.fn(),
       sendNewsletterWelcome: vi.fn(),
       sendRegistrationNotice: vi.fn(),
+      sendPurchaseOrderEmails: vi.fn().mockResolvedValue({ internal: true, customer: true }),
     },
     newsletterService: {
       subscribe: vi.fn().mockResolvedValue({
