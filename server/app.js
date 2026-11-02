@@ -7,6 +7,7 @@ import { createCheckoutRouter } from './routes/checkout.js'
 import { createEmailService } from './services/emailService.js'
 import { createNewsletterService } from './services/newsletterService.js'
 import { createCheckoutService } from './services/checkoutService.js'
+import { createCheckoutDeliveryService } from './services/checkoutDeliveryService.js'
 import { errorHandler } from './middleware/errorHandler.js'
 import { requestGuards } from './middleware/requestGuards.js'
 import { requestId } from './middleware/requestId.js'
@@ -25,11 +26,13 @@ export function createApp(config, dependencies = {}) {
   const emailService = dependencies.emailService ?? createEmailService(config)
   const newsletterService = dependencies.newsletterService ?? createNewsletterService(emailService, dependencies.adminServices)
   const checkoutService = dependencies.checkoutService ?? createCheckoutService(dependencies.adminServices)
+  const checkoutDeliveryService = dependencies.checkoutDeliveryService ?? createCheckoutDeliveryService(checkoutService, emailService)
   const allowedOrigins = normalizeAllowedOrigins(config.cors)
 
   app.locals.emailService = emailService
   app.locals.newsletterService = newsletterService
   app.locals.checkoutService = checkoutService
+  app.locals.checkoutDeliveryService = checkoutDeliveryService
 
   app.disable('x-powered-by')
   app.set('trust proxy', 1)
@@ -60,7 +63,7 @@ export function createApp(config, dependencies = {}) {
   app.use('/contact', createContactRouter(emailService))
   app.use('/newsletter', createNewsletterRouter(newsletterService))
   app.use('/registration-notice', createRegistrationRouter(emailService))
-  app.use('/checkout', createCheckoutRouter(checkoutService, dependencies.adminServices))
+  app.use('/checkout', createCheckoutRouter(checkoutDeliveryService, dependencies.adminServices))
 
   app.use((_req, res) => res.status(404).json({ success: false, error: 'Route not found.' }))
   app.use(errorHandler)
