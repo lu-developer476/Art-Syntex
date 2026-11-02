@@ -27,18 +27,18 @@ const themeOptions: Array<{ value: Theme; labelKey: 'themeDark' | 'themeLight'; 
 
 const brandMessages: Record<Language, string[]> = {
   es: [
-    'CARNE Y CROMO. LA EVOLUCIÓN NO PIDE PERMISO.',
-    'NIGHT CITY NO REGALA NADA: CADA MEJORA SE GANA.',
-    'TECNOLOGÍA DE AUMENTO HUMANO. PRECISIÓN POR ENCIMA DEL RUIDO.',
-    'TU CUERPO. TUS LÍMITES. TU PRÓXIMA VERSIÓN.',
-    'EN LA CIUDAD DEL MAÑANA, ADAPTARSE ES SOBREVIVIR.',
+    'EN NIGHT CITY, EL CROMO NO REEMPLAZA EL CRITERIO. LO AMPLIFICA.',
+    'DE WATSON A CORPO PLAZA: LA EXIGENCIA NO CAMBIA.',
+    'LA CIUDAD NUNCA DUERME. TU PRÓXIMA MEJORA TAMPOCO.',
+    'DESDE AFTERLIFE HASTA LOS BADLANDS, CADA DECISIÓN TIENE UN COSTO.',
+    'NO SE TRATA DE TENER MÁS CROMO. SE TRATA DE SABER QUÉ HACER CON ÉL.',
   ],
   en: [
-    'FLESH AND CHROME. EVOLUTION DOES NOT ASK PERMISSION.',
-    'NIGHT CITY GIVES NOTHING AWAY: EVERY UPGRADE IS EARNED.',
-    'HUMAN AUGMENTATION TECHNOLOGY. PRECISION OVER NOISE.',
-    'YOUR BODY. YOUR LIMITS. YOUR NEXT VERSION.',
-    'IN THE CITY OF TOMORROW, ADAPTATION IS SURVIVAL.',
+    'IN NIGHT CITY, CHROME DOESN’T REPLACE JUDGMENT. IT AMPLIFIES IT.',
+    'FROM WATSON TO CORPO PLAZA: THE STANDARD NEVER CHANGES.',
+    'THE CITY NEVER SLEEPS. NEITHER DOES YOUR NEXT UPGRADE.',
+    'FROM THE AFTERLIFE TO THE BADLANDS, EVERY CHOICE HAS A COST.',
+    'IT ISN’T ABOUT HAVING MORE CHROME. IT’S ABOUT KNOWING WHAT TO DO WITH IT.',
   ],
 }
 
@@ -117,6 +117,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="app-shell flex min-h-screen flex-col px-4 py-6 text-purple-100 sm:px-6 md:px-8 md:py-8 xl:px-10">
       <header className="sticky top-3 z-40 mx-auto mb-6 w-full max-w-6xl rounded-3xl border border-purple-400/40 bg-black/65 px-4 py-4 shadow-[0_0_35px_rgba(168,85,247,0.12)] backdrop-blur md:px-6 lg:px-8">
+        <div className="mb-4 flex min-h-8 items-center gap-3 border-b border-purple-400/25 pb-3">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.8)]" aria-hidden="true" />
+          <p
+            key={tickerIndex}
+            className="min-w-0 flex-1 text-[9px] font-semibold uppercase leading-relaxed tracking-[0.12em] text-purple-100 sm:text-[10px] sm:tracking-[0.16em] md:text-[11px]"
+          >
+            {brandMessages[language][tickerIndex]}
+          </p>
+          <span className="hidden shrink-0 font-mono text-[9px] uppercase tracking-[0.18em] text-cyan-200/70 sm:inline">
+            NIGHT CITY // A/S NEXUS
+          </span>
+        </div>
+
         <div className="flex items-center justify-between gap-4">
           <Link
             to="/"
@@ -228,7 +241,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </I18nProvider>
 
       <footer className="mt-12 border-t border-purple-500/40 pt-6 text-center text-xs leading-relaxed tracking-wide text-purple-200 md:text-sm">
-        <span className="text-cyber-gold">©</span> {new Date().getFullYear()} {t('rights')} • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
+        <div className="flex flex-col items-center gap-2">
+          <p>
+            <span className="text-cyber-gold">©</span> {new Date().getFullYear()} {t('rights')} • Built with React.js, Next.js, TypeScript & Tailwind CSS • UX/UI Interface • Database and Deploy by Firebase ®
+          </p>
+          <p className="max-w-3xl text-[10px] font-medium uppercase leading-relaxed tracking-[0.14em] text-purple-300/80 md:text-xs">
+            {t('footerDescription')}
+          </p>
+        </div>
       </footer>
     </div>
   )
