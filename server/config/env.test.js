@@ -23,6 +23,7 @@ describe('backend configuration', () => {
       user: 'mail@example.com',
       pass: 'secret',
       receiver: 'mail@example.com',
+      orderReceiver: 'mail@example.com',
       contactFrom: 'mail@example.com',
       contactReplyTo: 'mail@example.com',
       newsletterFrom: 'mail@example.com',
@@ -45,6 +46,7 @@ describe('backend configuration', () => {
     expect(config.email.contactFrom).toBe('lucasmontenegroburgos@gmail.com')
     expect(config.email.newsletterFrom).toBe('lucasmontenegroburgos@gmail.com')
     expect(config.email.receiver).toBe('lucasmontenegroburgos@gmail.com')
+    expect(config.email.orderReceiver).toBe('lucasmontenegroburgos@gmail.com')
     expect(config.missing).toEqual([])
   })
 
