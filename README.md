@@ -122,7 +122,7 @@ Las reglas actuales permiten:
 - lectura pública del catálogo
 - escritura temporal en `products` hasta el **1 de enero de 2030**
 - acceso propietario a `users/{uid}`
-- creación y lectura restringida de `purchaseOrders` al usuario autenticado dueño del documento
+- lectura de `purchaseOrders` sólo al usuario propietario; las altas se realizan desde la API serverless con Firebase Admin
 - creación pública de `contactMessages`
 - creación de `notifications` sólo por usuarios autenticados
 
