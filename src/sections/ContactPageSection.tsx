@@ -38,25 +38,35 @@ export default function ContactPageSection() {
         createdAt: serverTimestamp(),
       })
 
-      await postMailService({
-        path: '/contact',
-        payload: {
-          name: contactName,
-          email: contactEmail,
-          message: contactDescription,
-        },
-      })
+      let emailSent = false
+      try {
+        await postMailService({
+          path: '/contact',
+          payload: {
+            name: contactName,
+            email: contactEmail,
+            message: contactDescription,
+          },
+        })
+        emailSent = true
+      } catch {
+        // The contact request is already persisted in Firestore.
+      }
 
-      await addNotification(db, 'Nueva solicitud', 'Se ha recibido la solicitud para unirse a nuestra red', {
-        email: contactEmail,
-      })
+      try {
+        await addNotification(db, 'Nueva solicitud', 'Se ha recibido una solicitud desde el formulario de contacto', {
+          email: contactEmail,
+        })
+      } catch {
+        // Notifications are ancillary and may be unavailable for signed-out visitors.
+      }
 
       setContactName('')
       setContactEmail('')
       setContactDescription('')
-      setContactMessage('Solicitud enviada. También te mandamos un correo confirmando tu constancia inmediata.')
+      setContactMessage(emailSent ? t('contactEmailSuccess') : t('contactSavedWithoutEmail'))
     } catch {
-      setContactMessage('No se ha podido, por favor, intentalo nuevamente en unos minutos.')
+      setContactMessage('No se pudo registrar el mensaje. Revisá tu conexión e intentá nuevamente.')
     } finally {
       setIsSubmitting(false)
     }
@@ -75,23 +85,38 @@ export default function ContactPageSection() {
     setIsNewsletterSubmitting(true)
 
     try {
-      const result = await postMailService({
-        path: '/newsletter/subscribe',
-        payload: {
-          email: normalizedEmail,
-          consent: true,
-        },
-      })
+      const { doc, serverTimestamp, setDoc } = await import('firebase/firestore')
+      const { db } = await import('../firebase/config')
+
+      // Persist the consent first so an unavailable mail API does not discard the subscription.
+      await setDoc(doc(db, 'newsletterSubscribers', encodeURIComponent(normalizedEmail)), {
+        email: normalizedEmail,
+        consent: true,
+        source: 'contact-page',
+        consentedAt: serverTimestamp(),
+      }, { merge: true })
 
       setNewsletterEmail('')
       setNewsletterConsent(false)
 
-      if (result.welcomeEmailSent === true) {
-        setNewsletterMessage(t('newsletterSuccess'))
-      } else if (result.pending === true) {
-        setNewsletterMessage(t('newsletterPending'))
-      } else {
-        setNewsletterMessage(t('newsletterAlreadyRegistered'))
+      try {
+        const result = await postMailService({
+          path: '/newsletter/subscribe',
+          payload: {
+            email: normalizedEmail,
+            consent: true,
+          },
+        })
+
+        if (result.welcomeEmailSent === true) {
+          setNewsletterMessage(t('newsletterSuccess'))
+        } else if (result.pending === true) {
+          setNewsletterMessage(t('newsletterPending'))
+        } else {
+          setNewsletterMessage(t('newsletterAlreadyRegistered'))
+        }
+      } catch {
+        setNewsletterMessage(t('newsletterSavedWithoutWelcome'))
       }
     } catch {
       setNewsletterMessage(t('newsletterError'))
