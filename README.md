@@ -12,7 +12,7 @@
 ![Nodemailer](https://img.shields.io/badge/Nodemailer-009688?style=for-the-badge)
 ![CORS](https://img.shields.io/badge/CORS-283593?style=for-the-badge)
 
-Art-Syntex (A/S Nexus) es una SPA orientada a catálogo, autenticación de usuarios y checkout básico. El frontend está construido con React + Vite y utiliza Firebase para autenticación, persistencia y despliegue. El repositorio también incluye un servicio Node.js independiente para envío transaccional de correos mediante Express y Nodemailer.
+Art-Syntex (A/S Nexus) es una SPA orientada a catálogo, autenticación de usuarios y checkout básico. El frontend está construido con React + Vite y utiliza Firebase para autenticación, persistencia y despliegue. El repositorio también incluye una API serverless para correo y checkout con Netlify Functions; Express queda disponible para desarrollo local y pruebas, sin requerir un servidor permanente.
 
 ## Estado actual del proyecto
 
@@ -354,7 +354,8 @@ npm run firebase:deploy:hosting
 - El checkout requiere usuario autenticado y correo disponible en la sesión actual.
 - El login invalida la sesión si la cuenta existe pero todavía no verificó el correo.
 - El backend valida estructura y longitud de campos antes de enviar correos.
-- El rate limit del servicio Express utiliza almacenamiento en memoria; para despliegues horizontales conviene reemplazarlo por un store externo.
+- El rate limit de Express y Netlify Functions usa almacenamiento en memoria por instancia; no es un contador distribuido global.
+- Netlify Functions ejecuta la API bajo demanda y no mantiene un servidor Node.js encendido.
 - El backend separa configuración, routing, controllers, servicios, middleware y errores para mantener las responsabilidades aisladas.
 - La colección `mail` figura en las reglas de Firestore, pero no existe escritura activa hacia esa colección dentro del código actual.
 
