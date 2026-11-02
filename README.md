@@ -59,7 +59,7 @@ Servicio opcional ubicado en `server/` con:
 
 - **Express 4**
 - **CORS** configurable por origen
-- **Nodemailer** con transporte Gmail
+- **Nodemailer** con SMTP configurable (Gmail por defecto y preparado para proveedor transaccional)
 - Validación y sanitización de payloads
 - Rate limiting en middleware reutilizable
 - Endpoint de salud (`GET /health`)
@@ -69,11 +69,13 @@ Servicio opcional ubicado en `server/` con:
 - Servicio de email aislado de Express
 - Endpoints de correo:
   - `POST /contact`
+  - `POST /newsletter/subscribe`
   - `POST /registration-notice`
 
-El backend procesa dos flujos transaccionales:
+El backend procesa tres flujos transaccionales:
 
-- Notificación de contacto/postulación al destinatario configurado y confirmación automática al remitente.
+- Notificación de contacto al destinatario configurado y confirmación automática al remitente.
+- Alta de newsletter en Firestore Admin y envío de un correo de bienvenida. El envío queda registrado para evitar repetirlo en cada reintento.
 - Correo complementario de onboarding para guiar la validación de cuenta registrada en Firebase Authentication.
 
 ### Calidad
@@ -106,6 +108,7 @@ El repositorio incluye una capa de calidad con:
 - `users`: perfiles de usuario
 - `purchaseOrders`: órdenes generadas desde checkout
 - `contactMessages`: mensajes/postulaciones enviadas desde contacto
+- `newsletterSubscribers`: direcciones suscritas, consentimiento y estado del correo de bienvenida
 - `notifications`: eventos operativos internos
 
 ### Hosting
@@ -218,29 +221,46 @@ Variable opcional:
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
-`VITE_API_BASE_URL` define la base de la API consumida por el frontend para `/contact` y `/registration-notice`. Si no se declara, el cliente usa `http://localhost:3001`.
+`VITE_API_BASE_URL` define la base de la API consumida por el frontend para `/contact`, `/newsletter/subscribe` y `/registration-notice`. Si no se declara, el cliente usa `http://localhost:3001`.
 
 ### Backend
 
+El archivo `.env.example` incluye la configuración completa. Los valores actuales para correo son:
+
 ```env
-EMAIL_USER=
+EMAIL_USER=lucasmontenegroburgos@gmail.com
 EMAIL_PASS=
-CONTACT_RECEIVER_EMAIL=
-ALLOWED_ORIGIN=
-APP_BASE_URL=
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+CONTACT_RECEIVER_EMAIL=lucasmontenegroburgos@gmail.com
+CONTACT_FROM=lucasmontenegroburgos@gmail.com
+CONTACT_REPLY_TO=lucasmontenegroburgos@gmail.com
+NEWSLETTER_FROM=lucasmontenegroburgos@gmail.com
+REGISTRATION_FROM=lucasmontenegroburgos@gmail.com
+ALLOWED_ORIGINS=http://localhost:5173
+APP_BASE_URL=http://localhost:5173
 PORT=3001
 ```
 
 Descripción:
 
-- `EMAIL_USER`: cuenta emisora utilizada por Nodemailer.
-- `EMAIL_PASS`: credencial o app password asociada a `EMAIL_USER`.
-- `CONTACT_RECEIVER_EMAIL`: destinatario de las postulaciones; si no se informa, se utiliza `EMAIL_USER`.
-- `ALLOWED_ORIGIN`: origen permitido por CORS.
-- `APP_BASE_URL`: URL pública usada en links incluidos en los correos.
-- `PORT`: puerto de escucha del servicio Express; por defecto `3001`.
+- `EMAIL_USER` y `EMAIL_PASS`: credenciales SMTP. Para Gmail, `EMAIL_PASS` debe ser una contraseña de aplicación; nunca se guarda en el repositorio.
+- `SMTP_HOST`, `SMTP_PORT` y `SMTP_SECURE`: servidor, puerto y modo TLS del proveedor de correo. El valor predeterminado corresponde a Gmail SMTP.
+- `CONTACT_FROM`: remitente de los avisos y confirmaciones del formulario.
+- `CONTACT_RECEIVER_EMAIL`: casilla que recibe los mensajes del formulario.
+- `CONTACT_REPLY_TO`: destino de respuesta para la confirmación enviada al cliente.
+- `NEWSLETTER_FROM`: remitente independiente para las bienvenidas del newsletter.
+- `REGISTRATION_FROM`: remitente para los avisos de registro.
+- `ALLOWED_ORIGINS`: orígenes permitidos por CORS; admite una lista separada por comas. `ALLOWED_ORIGIN` sigue aceptándose por compatibilidad.
+- `APP_BASE_URL`: URL pública usada en los enlaces de los correos.
+- `PORT`: puerto de escucha de Express; por defecto `3001`.
 
-`EMAIL_USER` y `EMAIL_PASS` son obligatorias para iniciar el backend. El frontend puede ejecutarse sin estas variables siempre que no se requiera el servicio de correo.
+Si no se declara `EMAIL_USER`, el backend utiliza `lucasmontenegroburgos@gmail.com`. `EMAIL_PASS` y las credenciales de Firebase Admin sí son necesarias para iniciar el servicio.
+
+#### Migración futura a un dominio propio
+
+Cuando exista un dominio autenticado y un proveedor SMTP, no habrá que modificar el código. Se reemplazan las variables SMTP y los remitentes, por ejemplo `CONTACT_FROM=contacto@art-syntex.net` y `NEWSLETTER_FROM=newsletters@art-syntex.net`. El proveedor deberá tener verificadas esas direcciones/dominio y sus registros de autenticación. No alcanza con cambiar el texto del remitente si el SMTP actual no autoriza esa dirección.
 
 ## Ejecución local
 
