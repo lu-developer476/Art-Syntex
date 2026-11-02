@@ -40,7 +40,6 @@ export function createEmailService(config, transporter = null) {
   })
 
   async function sendContactEmails(data) {
-    const safeName = escapeHtml(data.name)
     const safeEmail = escapeHtml(data.email)
     const safeMessage = escapeHtml(data.message).replace(/\n/g, '<br>')
 
