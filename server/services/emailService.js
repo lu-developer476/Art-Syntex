@@ -155,7 +155,7 @@ export function createEmailService(config, transporter = null) {
     const safeCustomerName = escapeHtml(order.customerName || 'Cliente')
     const itemsText = order.items.map((item) =>
       '- ' + item.name + ' x' + item.quantity + ': USD ' + Number(item.lineTotal).toFixed(2),
-    ).join('\\n')
+    ).join('\n')
     const itemsHtml = order.items.map((item) => (
       '<tr>'
       + '<td style="padding:9px;border-bottom:1px solid #342344;">' + escapeHtml(item.name) + '</td>'
@@ -186,7 +186,7 @@ export function createEmailService(config, transporter = null) {
         '',
         'Total: USD ' + Number(order.total).toFixed(2),
         'Se adjunta el PDF de la orden.',
-      ].join('\\n'),
+      ].join('\n'),
       html: renderEmailShell({
         eyebrow: 'Nueva orden de compra',
         title: 'Orden ' + safeOrderId,
@@ -218,7 +218,7 @@ export function createEmailService(config, transporter = null) {
         '',
         'Adjuntamos el PDF con el detalle de tu orden.',
         config.appBaseUrl,
-      ].join('\\n'),
+      ].join('\n'),
       html: renderEmailShell({
         eyebrow: 'Orden registrada',
         title: 'Hola ' + safeCustomerName + ', recibimos tu pedido.',
