@@ -115,6 +115,8 @@ El repositorio incluye una capa de calidad con:
 
 La SPA está preparada para desplegarse en **Firebase Hosting**, publicando la carpeta `dist` y resolviendo todas las rutas al `index.html` de Vite.
 
+El workflow de Firebase despliega la SPA y las reglas de Firestore; **no despliega el servicio Express**. El backend debe ejecutarse como servicio web independiente (el repositorio incluye un `Dockerfile` para ese servicio), con sus credenciales privadas configuradas en el proveedor. En producción, la URL pública del servicio debe guardarse como secreto de GitHub `VITE_API_BASE_URL` para incorporarse al build del frontend.
+
 ### Reglas e índices
 
 El repositorio incluye:
