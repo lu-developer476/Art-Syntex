@@ -223,7 +223,7 @@ Variable opcional:
 VITE_API_BASE_URL=http://localhost:3001
 ```
 
-`VITE_API_BASE_URL` define la base de la API consumida por el frontend para `/contact`, `/newsletter/subscribe` y `/registration-notice`. Si no se declara, el cliente usa `http://localhost:3001`.
+`VITE_API_BASE_URL` define la URL pública de la API consumida por el frontend para `/contact`, `/newsletter/subscribe` y `/registration-notice`. `http://localhost:3001` se usa únicamente en desarrollo local. En producción, la variable debe contener la URL pública del backend; si falta, los datos se guardan en Firestore cuando corresponde, pero no se envían correos.
 
 ### Backend
 
