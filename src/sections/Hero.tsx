@@ -29,7 +29,7 @@ export default function HeroSection() {
             {t('heroQuote')}
           </p>
 
-          <p className="max-w-4xl text-base text-purple-100/80 md:text-lg">
+          <p className="w-full text-base text-purple-100/80 md:text-lg">
             {t('heroDescription')}
           </p>
         </div>
