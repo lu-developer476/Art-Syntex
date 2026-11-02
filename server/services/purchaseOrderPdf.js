@@ -4,14 +4,16 @@ const PAGE_WIDTH = 595
 const PAGE_HEIGHT = 842
 const MARGIN = 48
 
+// Helvetica with WinAnsiEncoding supports Spanish Latin-1 characters (á, é, í, ó, ú, ü, ñ).
+// Keep those characters intact instead of stripping diacritics from customer/product names.
 function safeText(value) {
   return String(value ?? '')
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFC')
     .replace(/[\u2013\u2014]/g, '-')
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201c\u201d]/g, '"')
-    .replace(/[^\x20-\x7e]/g, ' ')
+    .replace(/\u2026/g, '...')
+    .replace(/[^\x20-\xff]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }
@@ -68,7 +70,7 @@ function makePage(continuation = false) {
   const commands = []
   commands.push('0.16 0.04 0.25 rg 0 786 595 56 re f\n')
   commands.push(textCommand('ART-SYNTEX  |  A/S NEXUS', MARGIN, 810, 14, 'F2', '1 1 1'))
-  commands.push(textCommand(continuation ? 'ORDEN DE COMPRA - CONTINUACION' : 'ORDEN DE COMPRA', MARGIN, 752, continuation ? 17 : 23, 'F2'))
+  commands.push(textCommand(continuation ? 'ORDEN DE COMPRA - CONTINUACIÓN' : 'ORDEN DE COMPRA', MARGIN, 752, continuation ? 17 : 23, 'F2'))
   if (!continuation) {
     commands.push(textCommand('Documento informativo - no constituye factura ni acredita un pago', MARGIN, 730, 9, 'F1', '0.38 0.32 0.43'))
   }
@@ -96,15 +98,15 @@ function makePdf(pages) {
 
   pages.forEach((page, index) => {
     page.commands.push(lineCommand(MARGIN, 64, PAGE_WIDTH - MARGIN, 64, '0.78 0.73 0.84', 0.6))
-    page.commands.push(textCommand('Art-Syntex - Orden pendiente de confirmacion', MARGIN, 46, 8, 'F1', '0.38 0.32 0.43'))
-    page.commands.push(textCommand('Pagina ' + (index + 1) + ' de ' + pages.length, 485, 46, 8, 'F1', '0.38 0.32 0.43'))
+    page.commands.push(textCommand('Art-Syntex - Orden pendiente de confirmación', MARGIN, 46, 8, 'F1', '0.38 0.32 0.43'))
+    page.commands.push(textCommand('Página ' + (index + 1) + ' de ' + pages.length, 485, 46, 8, 'F1', '0.38 0.32 0.43'))
 
     const stream = page.commands.join('')
     const pageObjectId = 5 + index * 2
     const streamObjectId = pageObjectId + 1
 
     objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + PAGE_WIDTH + ' ' + PAGE_HEIGHT + '] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ' + streamObjectId + ' 0 R >>')
-    objects.push('<< /Length ' + Buffer.byteLength(stream, 'ascii') + ' >>\nstream\n' + stream + 'endstream')
+    objects.push('<< /Length ' + Buffer.byteLength(stream, 'latin1') + ' >>\nstream\n' + stream + 'endstream')
   })
 
   const chunks = [Buffer.from('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n', 'binary')]
@@ -113,7 +115,7 @@ function makePdf(pages) {
 
   objects.forEach((body, index) => {
     offsets.push(length)
-    const objectChunk = Buffer.from((index + 1) + ' 0 obj\n' + body + '\nendobj\n', 'binary')
+    const objectChunk = Buffer.from((index + 1) + ' 0 obj\n' + body + '\nendobj\n', 'latin1')
     chunks.push(objectChunk)
     length += objectChunk.length
   })
@@ -141,7 +143,7 @@ export function createPurchaseOrderPdf(order) {
 
   page.commands.push(textCommand('Orden', MARGIN, page.y, 8, 'F2', '0.38 0.32 0.43'))
   page.commands.push(textCommand(safeText(order.orderId), MARGIN, page.y - 18, 12, 'F2'))
-  page.commands.push(textCommand('Fecha de emision', 340, page.y, 8, 'F2', '0.38 0.32 0.43'))
+  page.commands.push(textCommand('Fecha de emisión', 340, page.y, 8, 'F2', '0.38 0.32 0.43'))
   page.commands.push(textCommand(formatDate(order.createdAt), 340, page.y - 18, 10, 'F2'))
   page.y -= 44
   page.commands.push(textCommand('Cliente', MARGIN, page.y, 8, 'F2', '0.38 0.32 0.43'))
@@ -149,7 +151,7 @@ export function createPurchaseOrderPdf(order) {
   page.commands.push(textCommand('Correo', 340, page.y, 8, 'F2', '0.38 0.32 0.43'))
   page.commands.push(textCommand(order.customerEmail || 'No disponible', 340, page.y - 16, 9, 'F1'))
   page.y -= 48
-  page.commands.push(textCommand('Estado: PENDIENTE DE CONFIRMACION / PAGO', MARGIN, page.y, 9, 'F2', '0.48 0.19 0.61'))
+  page.commands.push(textCommand('Estado: PENDIENTE DE CONFIRMACIÓN / PAGO', MARGIN, page.y, 9, 'F2', '0.48 0.19 0.61'))
   page.y -= 28
   addTableHeader(page)
 
@@ -183,7 +185,7 @@ export function createPurchaseOrderPdf(order) {
   page.commands.push(lineCommand(340, page.y - 4, PAGE_WIDTH - MARGIN, page.y - 4, '0.48 0.19 0.61', 1))
   page.commands.push(textCommand('TOTAL DE LA ORDEN', 340, page.y - 25, 10, 'F2'))
   page.commands.push(textCommand(formatMoney(order.total), 455, page.y - 25, 11, 'F2', '0.36 0.10 0.48'))
-  page.commands.push(textCommand('La orden queda registrada con estado pendiente. No se ha confirmado ningun pago.', MARGIN, page.y - 58, 8.5, 'F1', '0.38 0.32 0.43'))
+  page.commands.push(textCommand('La orden queda registrada con estado pendiente. No se ha confirmado ningún pago.', MARGIN, page.y - 58, 8.5, 'F1', '0.38 0.32 0.43'))
 
   pages.push(page)
   return makePdf(pages)
