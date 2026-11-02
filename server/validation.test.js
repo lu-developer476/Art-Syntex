@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   sanitizeInput,
   validateContactPayload,
+  validateNewsletterPayload,
   validateRegistrationPayload,
 } from './validation.js'
 
@@ -55,6 +56,35 @@ describe('validateContactPayload', () => {
       errors: ['Request body must be a JSON object.'],
       sanitizedData: null,
     })
+  })
+})
+
+describe('validateNewsletterPayload', () => {
+  it('accepts explicit consent and normalizes the address', () => {
+    expect(validateNewsletterPayload({
+      email: 'LUCAS+NEWS@GMAIL.COM',
+      consent: true,
+    })).toEqual({
+      isValid: true,
+      errors: [],
+      sanitizedData: {
+        email: 'lucas+news@gmail.com',
+        consent: true,
+      },
+    })
+  })
+
+  it('rejects missing consent and invalid email addresses', () => {
+    const result = validateNewsletterPayload({
+      email: 'not-an-email',
+      consent: false,
+    })
+
+    expect(result.isValid).toBe(false)
+    expect(result.errors).toEqual([
+      'Email address is invalid.',
+      'Explicit newsletter consent is required.',
+    ])
   })
 })
 
