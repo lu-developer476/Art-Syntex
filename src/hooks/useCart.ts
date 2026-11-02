@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { createPendingCheckout, downloadPurchaseOrderPdf } from '../checkout/checkoutApi'
 import type { Product } from '../data/products'
 import type { CartItem } from '../lib/home'
@@ -14,6 +14,8 @@ export function useCart() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null)
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const checkoutInProgress = useRef(false)
 
   const cartTotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0),
@@ -65,6 +67,7 @@ export function useCart() {
   const closeCart = () => setIsCartOpen(false)
 
   const checkout = async (user: PurchaseUser | null) => {
+    if (checkoutInProgress.current) return
     setPurchaseMessage(null)
 
     if (!user || cart.length === 0) {
@@ -76,6 +79,9 @@ export function useCart() {
       setPurchaseMessage('No pudimos iniciar el checkout porque tu cuenta no tiene un correo válido.')
       return
     }
+
+    checkoutInProgress.current = true
+    setIsCheckingOut(true)
 
     try {
       const result = await createPendingCheckout(cart.map(({ product, quantity }) => ({
@@ -107,6 +113,9 @@ export function useCart() {
       setPurchaseMessage(error instanceof Error
         ? error.message
         : 'No pudimos iniciar el checkout. Volvé a intentarlo en unos minutos.')
+    } finally {
+      checkoutInProgress.current = false
+      setIsCheckingOut(false)
     }
   }
 
@@ -120,6 +129,7 @@ export function useCart() {
     decreaseQuantity,
     increaseQuantity,
     isCartOpen,
+    isCheckingOut,
     openCart,
     purchaseMessage,
     removeFromCart,
