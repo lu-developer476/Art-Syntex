@@ -73,3 +73,5 @@ jobs:
           firebaseServiceAccount: ${{ env.FIREBASE_SERVICE_ACCOUNT_JSON }}
           projectId: ${{ env.FIREBASE_DEPLOY_PROJECT_ID }}
           channelId: live
+
+# Automatic production deployment on every push to main.
