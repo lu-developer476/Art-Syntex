@@ -75,19 +75,24 @@ export default function ContactPageSection() {
     setIsNewsletterSubmitting(true)
 
     try {
-      const { doc, serverTimestamp, setDoc } = await import('firebase/firestore')
-      const { db } = await import('../firebase/config')
-
-      await setDoc(doc(db, 'newsletterSubscribers', encodeURIComponent(normalizedEmail)), {
-        email: normalizedEmail,
-        consent: true,
-        source: 'contact-page',
-        consentedAt: serverTimestamp(),
+      const result = await postMailService({
+        path: '/newsletter/subscribe',
+        payload: {
+          email: normalizedEmail,
+          consent: true,
+        },
       })
 
       setNewsletterEmail('')
       setNewsletterConsent(false)
-      setNewsletterMessage(t('newsletterSuccess'))
+
+      if (result.welcomeEmailSent === true) {
+        setNewsletterMessage(t('newsletterSuccess'))
+      } else if (result.pending === true) {
+        setNewsletterMessage(t('newsletterPending'))
+      } else {
+        setNewsletterMessage(t('newsletterAlreadyRegistered'))
+      }
     } catch {
       setNewsletterMessage(t('newsletterError'))
     } finally {
