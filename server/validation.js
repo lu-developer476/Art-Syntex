@@ -12,13 +12,17 @@ export function sanitizeInput(value, maxLength) {
     .slice(0, maxLength)
 }
 
+function invalidObjectPayload() {
+  return {
+    isValid: false,
+    errors: ['Request body must be a JSON object.'],
+    sanitizedData: null,
+  }
+}
+
 export function validateContactPayload(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return {
-      isValid: false,
-      errors: ['Request body must be a JSON object.'],
-      sanitizedData: null,
-    }
+    return invalidObjectPayload()
   }
 
   const sanitizedData = {
@@ -48,13 +52,36 @@ export function validateContactPayload(payload) {
   }
 }
 
+export function validateNewsletterPayload(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return invalidObjectPayload()
+  }
+
+  const sanitizedData = {
+    email: sanitizeInput(payload.email, MAX_EMAIL_LENGTH).toLowerCase(),
+    consent: payload.consent,
+  }
+
+  const errors = []
+
+  if (!EMAIL_REGEX.test(sanitizedData.email)) {
+    errors.push('Email address is invalid.')
+  }
+
+  if (sanitizedData.consent !== true) {
+    errors.push('Explicit newsletter consent is required.')
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    sanitizedData,
+  }
+}
+
 export function validateRegistrationPayload(payload) {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return {
-      isValid: false,
-      errors: ['Request body must be a JSON object.'],
-      sanitizedData: null,
-    }
+    return invalidObjectPayload()
   }
 
   const sanitizedData = {
