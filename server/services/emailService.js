@@ -149,5 +149,105 @@ export function createEmailService(config, transporter = null) {
     }
   }
 
-  return { sendContactEmails, sendNewsletterWelcome, sendRegistrationNotice, transporter: mailer }
+
+  async function sendPurchaseOrderEmails({ order, pdfBuffer, fileName }) {
+    const safeOrderId = escapeHtml(order.orderId)
+    const safeCustomerName = escapeHtml(order.customerName || 'Cliente')
+    const itemsText = order.items.map((item) =>
+      '- ' + item.name + ' x' + item.quantity + ': USD ' + Number(item.lineTotal).toFixed(2),
+    ).join('\\n')
+    const itemsHtml = order.items.map((item) => (
+      '<tr>'
+      + '<td style="padding:9px;border-bottom:1px solid #342344;">' + escapeHtml(item.name) + '</td>'
+      + '<td style="padding:9px;border-bottom:1px solid #342344;text-align:center;">' + item.quantity + '</td>'
+      + '<td style="padding:9px;border-bottom:1px solid #342344;text-align:right;">USD ' + Number(item.unitPrice).toFixed(2) + '</td>'
+      + '<td style="padding:9px;border-bottom:1px solid #342344;text-align:right;">USD ' + Number(item.lineTotal).toFixed(2) + '</td>'
+      + '</tr>'
+    )).join('')
+    const attachment = [{
+      filename: fileName,
+      content: pdfBuffer,
+      contentType: 'application/pdf',
+    }]
+    const receiver = config.email.orderReceiver || config.email.receiver
+
+    const internalMessage = {
+      from: config.email.contactFrom || config.email.user,
+      replyTo: order.customerEmail,
+      to: receiver,
+      subject: 'Nueva orden de compra ' + order.orderId + ' | Art-Syntex',
+      text: [
+        'Orden: ' + order.orderId,
+        'Cliente: ' + order.customerName,
+        'Correo: ' + order.customerEmail,
+        'Estado: Pendiente de confirmación / pago',
+        '',
+        itemsText,
+        '',
+        'Total: USD ' + Number(order.total).toFixed(2),
+        'Se adjunta el PDF de la orden.',
+      ].join('\\n'),
+      html: renderEmailShell({
+        eyebrow: 'Nueva orden de compra',
+        title: 'Orden ' + safeOrderId,
+        body: '<p><strong>Cliente:</strong> ' + safeCustomerName + '</p>'
+          + '<p><strong>Correo:</strong> ' + escapeHtml(order.customerEmail) + '</p>'
+          + '<p><strong>Estado:</strong> Pendiente de confirmación / pago</p>'
+          + '<table style="width:100%;border-collapse:collapse;margin-top:18px;">'
+          + '<thead><tr><th>Producto</th><th>Cant.</th><th>Unitario</th><th>Subtotal</th></tr></thead>'
+          + '<tbody>' + itemsHtml + '</tbody></table>'
+          + '<h2 style="text-align:right;">Total: USD ' + Number(order.total).toFixed(2) + '</h2>'
+          + '<p>El PDF de la orden está adjunto.</p>',
+        ctaLabel: 'Abrir Art-Syntex',
+        ctaHref: config.appBaseUrl,
+        footer: 'El checkout no procesa ni confirma un pago.',
+      }),
+      attachments: attachment,
+    }
+
+    const customerMessage = {
+      from: config.email.contactFrom || config.email.user,
+      replyTo: config.email.contactReplyTo || receiver,
+      to: order.customerEmail,
+      subject: 'Art-Syntex | Orden de compra ' + order.orderId + ' registrada',
+      text: [
+        'Hola ' + order.customerName + ',',
+        '',
+        'Registramos tu orden ' + order.orderId + ' por USD ' + Number(order.total).toFixed(2) + '.',
+        'El estado actual es pendiente de confirmación / pago; este correo no acredita un pago.',
+        '',
+        'Adjuntamos el PDF con el detalle de tu orden.',
+        config.appBaseUrl,
+      ].join('\\n'),
+      html: renderEmailShell({
+        eyebrow: 'Orden registrada',
+        title: 'Hola ' + safeCustomerName + ', recibimos tu pedido.',
+        body: '<p>Registramos tu orden <strong>' + safeOrderId + '</strong> por <strong>USD ' + Number(order.total).toFixed(2) + '</strong>.</p>'
+          + '<p>El estado actual es <strong>pendiente de confirmación / pago</strong>. No se ha procesado ni confirmado ningún pago.</p>'
+          + '<p>Adjuntamos el PDF con el detalle de la orden.</p>',
+        ctaLabel: 'Visitar Art-Syntex',
+        ctaHref: config.appBaseUrl,
+        footer: 'Si no reconocés esta operación, respondé este correo para solicitar una revisión.',
+      }),
+      attachments: attachment,
+    }
+
+    const sendSafely = async (message) => {
+      try {
+        await mailer.sendMail(message)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const [internal, customer] = await Promise.all([
+      sendSafely(internalMessage),
+      sendSafely(customerMessage),
+    ])
+
+    return { internal, customer }
+  }
+
+  return { sendContactEmails, sendNewsletterWelcome, sendRegistrationNotice, sendPurchaseOrderEmails, transporter: mailer }
 }
