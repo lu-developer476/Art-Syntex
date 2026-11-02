@@ -67,7 +67,7 @@ export default function ContactPageSection() {
     setNewsletterMessage(null)
 
     const normalizedEmail = newsletterEmail.trim().toLowerCase()
-    if (!newsletterConsent || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail)) {
+    if (!newsletterConsent || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       setNewsletterMessage(t('newsletterValidation'))
       return
     }
