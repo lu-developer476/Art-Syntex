@@ -1,7 +1,7 @@
-export function createCheckoutController(checkoutService) {
+export function createCheckoutController(checkoutDeliveryService) {
   return async function checkoutController(req, res, next) {
     try {
-      const result = await checkoutService.createPendingOrder({
+      const result = await checkoutDeliveryService.createPendingOrder({
         idToken: req.get('authorization').slice(7),
         items: req.body?.items,
       })
