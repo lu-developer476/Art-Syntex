@@ -123,7 +123,7 @@ Las reglas actuales permiten:
 - lectura pública del catálogo
 - escritura temporal en `products` hasta el **1 de enero de 2030**
 - acceso propietario a `users/{uid}`
-- lectura de `purchaseOrders` sólo al usuario propietario; las altas se realizan desde la API serverless con Firebase Admin
+- lectura de `purchaseOrders` sólo al usuario propietario; las altas se realizan desde la API backend con Firebase Admin
 - creación pública de `contactMessages`
 - creación de `notifications` sólo por usuarios autenticados
 
@@ -138,13 +138,13 @@ Frontend SPA (React + Vite)
         |-- Cloud Firestore
         \-- Firebase Hosting
 
-API serverless (Netlify Functions)
+API HTTP (backend de Art-Syntex en Firebase)
         |
-        |-- netlify/functions/api.mjs
+        |-- server/index.js         Runtime Express
         |-- server/config/          Configuración SMTP
         |-- server/validation.js    Validación de payloads
         |-- server/services/        Firebase Admin, email y checkout PDF
-        \-- server/app.js           Express para desarrollo local
+        \-- netlify/functions/api.mjs  Adaptador alternativo para pruebas
 
 Quality layer
         |
@@ -355,8 +355,8 @@ npm run firebase:deploy:hosting
 - El checkout requiere usuario autenticado y correo disponible en la sesión actual.
 - El login invalida la sesión si la cuenta existe pero todavía no verificó el correo.
 - El backend valida estructura y longitud de campos antes de enviar correos.
-- El rate limit de Express y Netlify Functions usa almacenamiento en memoria por instancia; no es un contador distribuido global.
-- Netlify Functions ejecuta la API bajo demanda y no mantiene un servidor Node.js encendido.
+- El rate limit del backend usa almacenamiento en memoria por instancia; no es un contador distribuido global.
+- El adaptador alternativo de Netlify se conserva por compatibilidad y pruebas; no forma parte del despliegue requerido en Firebase.
 - El backend separa configuración, routing, controllers, servicios, middleware y errores para mantener las responsabilidades aisladas.
 - La colección `mail` figura en las reglas de Firestore, pero no existe escritura activa hacia esa colección dentro del código actual.
 
