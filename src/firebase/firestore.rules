@@ -21,6 +21,34 @@ service cloud.firestore {
         && request.resource.data.consentedAt == request.time;
     }
 
+    function isValidNewsletterSubscriptionUpdate() {
+      return request.resource.data.keys().hasAll(['email', 'consent', 'source', 'consentedAt'])
+        && request.resource.data.keys().hasOnly([
+          'email',
+          'consent',
+          'source',
+          'consentedAt',
+          'status',
+          'welcomeEmailStatus',
+          'welcomeEmailClaimedAt',
+          'welcomeEmailSentAt',
+          'updatedAt'
+        ])
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 5
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.email.matches('.*@.*[.].*')
+        && request.resource.data.consent == true
+        && request.resource.data.source == 'contact-page'
+        && request.resource.data.consentedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'consent',
+          'source',
+          'consentedAt'
+        ]);
+    }
+
     match /products/{productId} {
       allow read: if true;
       allow write: if request.time < timestamp.date(2030, 1, 1);
@@ -44,8 +72,7 @@ service cloud.firestore {
 
     match /newsletterSubscribers/{subscriberId} {
       allow create: if isValidNewsletterSubscription();
-      allow update: if isValidNewsletterSubscription()
-        && request.resource.data.email == resource.data.email;
+      allow update: if isValidNewsletterSubscriptionUpdate();
       allow read, delete: if false;
     }
 
