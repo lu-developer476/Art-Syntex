@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
-import { db } from '../firebase/config'
-import { createPurchaseOrder } from '../firebase/commerce'
+import { createPendingCheckout, downloadPurchaseOrderPdf } from '../checkout/checkoutApi'
 import type { Product } from '../data/products'
 import type { CartItem } from '../lib/home'
-import { addNotification } from '../lib/home'
+import { useI18n } from '../i18n'
 
 interface PurchaseUser {
   uid: string
@@ -11,6 +10,7 @@ interface PurchaseUser {
 }
 
 export function useCart() {
+  const { t } = useI18n()
   const [cart, setCart] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null)
@@ -68,7 +68,7 @@ export function useCart() {
     setPurchaseMessage(null)
 
     if (!user || cart.length === 0) {
-      setPurchaseMessage('Necesitás una sesión activa y al menos una mejora en el carrito para avanzar al checkout.')
+      setPurchaseMessage('Necesitás una sesión activa y al menos un producto en el carrito para avanzar al checkout.')
       return
     }
 
@@ -78,16 +78,35 @@ export function useCart() {
     }
 
     try {
-      await createPurchaseOrder(db, user.uid, user.email, cart)
-      await addNotification(db, 'Checkout iniciado', 'Tu pedido fue enviado a checkout para revisión', {
-        email: user.email,
-        total: String(cartTotal),
-      })
+      const result = await createPendingCheckout(cart.map(({ product, quantity }) => ({
+        productId: product.id,
+        quantity,
+      })))
+
+      let pdfDownloaded = false
+      if (result.pdfReady && result.pdfBase64) {
+        try {
+          downloadPurchaseOrderPdf(result.pdfBase64, result.pdfFileName)
+          pdfDownloaded = true
+        } catch {
+          pdfDownloaded = false
+        }
+      }
+
       setCart([])
       setIsCartOpen(false)
-      setPurchaseMessage('Checkout iniciado. Tu pedido quedó registrado y listo para seguimiento.')
-    } catch {
-      setPurchaseMessage('No pudimos iniciar el checkout. Volvé a intentarlo en unos minutos.')
+
+      if (pdfDownloaded && result.emailDelivery?.customer) {
+        setPurchaseMessage(t('purchaseOrderReady'))
+      } else if (pdfDownloaded) {
+        setPurchaseMessage(t('purchaseOrderEmailPending'))
+      } else {
+        setPurchaseMessage(t('purchaseOrderPdfPending'))
+      }
+    } catch (error) {
+      setPurchaseMessage(error instanceof Error
+        ? error.message
+        : 'No pudimos iniciar el checkout. Volvé a intentarlo en unos minutos.')
     }
   }
 
