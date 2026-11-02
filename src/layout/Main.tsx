@@ -125,9 +125,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
           >
             {brandMessages[language][tickerIndex]}
           </p>
-          <span className="hidden shrink-0 font-mono text-[9px] uppercase tracking-[0.18em] text-cyan-200/70 sm:inline">
-            NIGHT CITY // A/S NEXUS
-          </span>
         </div>
 
         <div className="flex items-center justify-between gap-4">
