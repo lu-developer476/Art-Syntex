@@ -2,13 +2,19 @@ import { useState, type FormEvent } from 'react'
 import ContactSection from '../components/home/ContactSection'
 import { addNotification } from '../lib/home'
 import { postMailService } from '../lib/api'
+import { useI18n } from '../i18n'
 
 export default function ContactPageSection() {
+  const { t } = useI18n()
   const [contactName, setContactName] = useState('')
   const [contactEmail, setContactEmail] = useState('')
   const [contactDescription, setContactDescription] = useState('')
   const [contactMessage, setContactMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [newsletterEmail, setNewsletterEmail] = useState('')
+  const [newsletterConsent, setNewsletterConsent] = useState(false)
+  const [newsletterMessage, setNewsletterMessage] = useState<string | null>(null)
+  const [isNewsletterSubmitting, setIsNewsletterSubmitting] = useState(false)
 
   const handleContactSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -56,6 +62,39 @@ export default function ContactPageSection() {
     }
   }
 
+  const handleNewsletterSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+    setNewsletterMessage(null)
+
+    const normalizedEmail = newsletterEmail.trim().toLowerCase()
+    if (!newsletterConsent || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(normalizedEmail)) {
+      setNewsletterMessage(t('newsletterValidation'))
+      return
+    }
+
+    setIsNewsletterSubmitting(true)
+
+    try {
+      const { doc, serverTimestamp, setDoc } = await import('firebase/firestore')
+      const { db } = await import('../firebase/config')
+
+      await setDoc(doc(db, 'newsletterSubscribers', encodeURIComponent(normalizedEmail)), {
+        email: normalizedEmail,
+        consent: true,
+        source: 'contact-page',
+        consentedAt: serverTimestamp(),
+      })
+
+      setNewsletterEmail('')
+      setNewsletterConsent(false)
+      setNewsletterMessage(t('newsletterSuccess'))
+    } catch {
+      setNewsletterMessage(t('newsletterError'))
+    } finally {
+      setIsNewsletterSubmitting(false)
+    }
+  }
+
   return (
     <section>
       <ContactSection
@@ -64,10 +103,17 @@ export default function ContactPageSection() {
         contactMessage={contactMessage}
         contactName={contactName}
         isSubmitting={isSubmitting}
+        newsletterConsent={newsletterConsent}
+        newsletterEmail={newsletterEmail}
+        newsletterMessage={newsletterMessage}
+        isNewsletterSubmitting={isNewsletterSubmitting}
         onDescriptionChange={setContactDescription}
         onEmailChange={setContactEmail}
         onNameChange={setContactName}
         onSubmit={handleContactSubmit}
+        onNewsletterConsentChange={setNewsletterConsent}
+        onNewsletterEmailChange={setNewsletterEmail}
+        onNewsletterSubmit={handleNewsletterSubmit}
       />
     </section>
   )
