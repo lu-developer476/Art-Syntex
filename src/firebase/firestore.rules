@@ -30,6 +30,36 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    function isValidNewsletterSubscription() {
+      return request.resource.data.keys().hasAll(['email', 'consent', 'source', 'consentedAt'])
+        && request.resource.data.keys().hasOnly(['email', 'consent', 'source', 'consentedAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 5
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.email.matches('^[^ @]+@[^ @]+[.][^ @]+    match /notifications/{notificationId} {
+      allow create: if signedIn();
+      allow read, update, delete: if false;
+    }
+
+    match /mail/{mailId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+  }
+}
+)
+        && request.resource.data.consent == true
+        && request.resource.data.source == 'contact-page'
+        && request.resource.data.consentedAt == request.time;
+    }
+
+    match /newsletterSubscribers/{subscriberId} {
+      allow create: if isValidNewsletterSubscription();
+      allow update: if isValidNewsletterSubscription()
+        && request.resource.data.email == resource.data.email;
+      allow read, delete: if false;
+    }
+
     match /notifications/{notificationId} {
       allow create: if signedIn();
       allow read, update, delete: if false;
