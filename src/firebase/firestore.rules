@@ -9,6 +9,18 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isValidNewsletterSubscription() {
+      return request.resource.data.keys().hasAll(['email', 'consent', 'source', 'consentedAt'])
+        && request.resource.data.keys().hasOnly(['email', 'consent', 'source', 'consentedAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 5
+        && request.resource.data.email.size() <= 160
+        && request.resource.data.email.matches('.*@.*[.].*')
+        && request.resource.data.consent == true
+        && request.resource.data.source == 'contact-page'
+        && request.resource.data.consentedAt == request.time;
+    }
+
     match /products/{productId} {
       allow read: if true;
       allow write: if request.time < timestamp.date(2030, 1, 1);
@@ -28,29 +40,6 @@ service cloud.firestore {
     match /contactMessages/{messageId} {
       allow create: if true;
       allow read, update, delete: if false;
-    }
-
-    function isValidNewsletterSubscription() {
-      return request.resource.data.keys().hasAll(['email', 'consent', 'source', 'consentedAt'])
-        && request.resource.data.keys().hasOnly(['email', 'consent', 'source', 'consentedAt'])
-        && request.resource.data.email is string
-        && request.resource.data.email.size() >= 5
-        && request.resource.data.email.size() <= 160
-        && request.resource.data.email.matches('^[^ @]+@[^ @]+[.][^ @]+    match /notifications/{notificationId} {
-      allow create: if signedIn();
-      allow read, update, delete: if false;
-    }
-
-    match /mail/{mailId} {
-      allow create: if true;
-      allow read, update, delete: if false;
-    }
-  }
-}
-)
-        && request.resource.data.consent == true
-        && request.resource.data.source == 'contact-page'
-        && request.resource.data.consentedAt == request.time;
     }
 
     match /newsletterSubscribers/{subscriberId} {
