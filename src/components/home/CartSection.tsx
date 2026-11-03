@@ -175,7 +175,7 @@ export default function CartSection({
             </button>
             <p className="text-xs leading-5 text-purple-300">
               {t('checkoutGuestHint')} {' '}
-              <a href="/acceso" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">{t('checkoutCreateAccount')}</a>
+              <a href="/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">{t('checkoutCreateAccount')}</a>
             </p>
           </div>
           {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
