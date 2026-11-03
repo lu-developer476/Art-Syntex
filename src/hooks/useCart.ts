@@ -1,14 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
 import { createPendingCheckout, downloadPurchaseOrderPdf } from '../checkout/checkoutApi'
+import type { CheckoutCustomer } from '../checkout/checkoutTypes'
 import type { Product } from '../data/products'
 import type { CartItem } from '../lib/home'
 import { useI18n } from '../i18n'
-
-interface PurchaseUser {
-  uid: string
-  email: string | null
-  emailVerified: boolean
-}
 
 export function useCart() {
   const { t } = useI18n()
@@ -22,7 +17,6 @@ export function useCart() {
     () => cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0),
     [cart],
   )
-
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + item.quantity, 0), [cart])
 
   const addToCart = (product: Product) => {
@@ -34,29 +28,22 @@ export function useCart() {
           item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
       }
-
       return [...currentCart, { product, quantity: 1 }]
     })
   }
 
   const increaseQuantity = (productId: string) => {
     setPurchaseMessage(null)
-    setCart((currentCart) =>
-      currentCart.map((item) =>
-        item.product.id === productId ? { ...item, quantity: item.quantity + 1 } : item,
-      ),
-    )
+    setCart((currentCart) => currentCart.map((item) =>
+      item.product.id === productId ? { ...item, quantity: item.quantity + 1 } : item,
+    ))
   }
 
   const decreaseQuantity = (productId: string) => {
     setPurchaseMessage(null)
-    setCart((currentCart) =>
-      currentCart
-        .map((item) =>
-          item.product.id === productId ? { ...item, quantity: item.quantity - 1 } : item,
-        )
-        .filter((item) => item.quantity > 0),
-    )
+    setCart((currentCart) => currentCart
+      .map((item) => item.product.id === productId ? { ...item, quantity: item.quantity - 1 } : item)
+      .filter((item) => item.quantity > 0))
   }
 
   const removeFromCart = (productId: string) => {
@@ -67,22 +54,12 @@ export function useCart() {
   const openCart = () => setIsCartOpen(true)
   const closeCart = () => setIsCartOpen(false)
 
-  const checkout = async (user: PurchaseUser | null) => {
+  const checkout = async (customer: CheckoutCustomer) => {
     if (checkoutInProgress.current) return
     setPurchaseMessage(null)
 
-    if (!user || cart.length === 0) {
-      setPurchaseMessage('Necesitás una sesión activa y al menos un producto en el carrito para avanzar al checkout.')
-      return
-    }
-
-    if (!user.email) {
-      setPurchaseMessage('No pudimos iniciar el checkout porque tu cuenta no tiene un correo válido.')
-      return
-    }
-
-    if (!user.emailVerified) {
-      setPurchaseMessage(t('checkoutVerifyEmailHint'))
+    if (cart.length === 0) {
+      setPurchaseMessage('Agregá al menos un producto para continuar.')
       return
     }
 
@@ -93,7 +70,7 @@ export function useCart() {
       const result = await createPendingCheckout(cart.map(({ product, quantity }) => ({
         productId: product.id,
         quantity,
-      })))
+      })), customer)
 
       let pdfDownloaded = false
       if (result.pdfReady && result.pdfBase64) {
@@ -106,8 +83,6 @@ export function useCart() {
       }
 
       setCart([])
-
-      // Keep the cart drawer open so the customer can actually read the order result.
       if (pdfDownloaded && result.emailDelivery?.customer) {
         setPurchaseMessage(t('purchaseOrderReady'))
       } else if (pdfDownloaded) {
@@ -128,19 +103,8 @@ export function useCart() {
   }
 
   return {
-    addToCart,
-    cart,
-    cartCount,
-    cartTotal,
-    checkout,
-    closeCart,
-    decreaseQuantity,
-    increaseQuantity,
-    isCartOpen,
-    isCheckingOut,
-    openCart,
-    purchaseMessage,
-    removeFromCart,
-    setPurchaseMessage,
+    addToCart, cart, cartCount, cartTotal, checkout, closeCart, decreaseQuantity,
+    increaseQuantity, isCartOpen, isCheckingOut, openCart, purchaseMessage,
+    removeFromCart, setPurchaseMessage,
   }
 }
