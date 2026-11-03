@@ -1,6 +1,6 @@
 import { auth } from '../firebase/config'
 import { resolveApiBaseUrl } from '../lib/api'
-import type { CheckoutItemInput } from './checkoutTypes'
+import type { CheckoutCustomer, CheckoutItemInput } from './checkoutTypes'
 
 const API_BASE_URL = resolveApiBaseUrl(
   import.meta.env.VITE_API_BASE_URL,
@@ -23,22 +23,22 @@ export interface PendingCheckoutResult {
   }
 }
 
-export async function createPendingCheckout(items: CheckoutItemInput[]): Promise<PendingCheckoutResult> {
+export async function createPendingCheckout(
+  items: CheckoutItemInput[],
+  customer: CheckoutCustomer,
+): Promise<PendingCheckoutResult> {
   if (!API_BASE_URL) {
     throw new Error('El servicio de checkout no tiene una URL pública configurada.')
   }
 
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   const user = auth.currentUser
-  if (!user) throw new Error('Debes iniciar sesión para comprar.')
+  if (user) headers.Authorization = `Bearer ${await user.getIdToken()}`
 
-  const token = await user.getIdToken()
   const response = await fetch(`${API_BASE_URL}/checkout`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ items }),
+    headers,
+    body: JSON.stringify({ items, customer }),
   })
 
   const payload = await response.json().catch(() => ({}))
