@@ -69,7 +69,7 @@ Flujos transaccionales:
 - Contacto: notificación interna y confirmación automática al remitente.
 - Newsletter: alta en Firestore y bienvenida sin duplicar envíos.
 - Registro: correo complementario para orientar la verificación de Firebase Authentication.
-- Checkout: validación de identidad y productos, creación de la orden en Firestore, generación del PDF y envío de copias al comprador y al buzón interno.
+- Checkout: compra como invitado o con sesión Firebase, validación de datos y productos, creación de la orden en Firestore, generación del PDF y envío de copias al comprador y al buzón interno.
 - Si SMTP no está configurado o no responde, la orden y el PDF se conservan; la respuesta informa que los correos no se entregaron.
 
 ### Calidad
@@ -352,7 +352,7 @@ npm run firebase:deploy:hosting
 
 - El seed del catálogo se ejecuta únicamente cuando `products` no contiene documentos.
 - Los documentos existentes de `products` se normalizan contra el seed tipado: se validan ids/categorías, se corrigen rutas legacy de imágenes y se usan valores fallback cuando faltan campos.
-- El checkout requiere usuario autenticado y correo disponible en la sesión actual.
+- El checkout no requiere iniciar sesión ni crear una cuenta: el comprador ingresa nombre y correo en el carrito. Si existe una sesión Firebase válida, la orden también queda asociada a esa cuenta.
 - El login invalida la sesión si la cuenta existe pero todavía no verificó el correo.
 - El backend valida estructura y longitud de campos antes de enviar correos.
 - El rate limit del backend usa almacenamiento en memoria por instancia; no es un contador distribuido global.
@@ -380,8 +380,8 @@ No hay que crear un sitio Netlify, contratar un plan externo ni desplegar otro s
 
 ### Qué hace el checkout
 
-1. El frontend envía los identificadores y cantidades del carrito junto con el token de Firebase Authentication.
-2. La API verifica el token y exige que el correo esté verificado.
+1. El frontend envía los identificadores y cantidades del carrito, además del nombre y correo del comprador.
+2. La compra como invitado no envía token ni requiere cuenta. Si hay una sesión Firebase, el token se valida de forma opcional para asociar la orden al usuario.
 3. Los precios se vuelven a leer desde Firestore; no se confía en los importes enviados por el navegador.
 4. La orden se guarda en `purchaseOrders` como `pending` / `unpaid`.
 5. El backend genera un PDF con número de orden, fecha, cliente, productos, cantidades, precios unitarios y total.
