@@ -1,17 +1,48 @@
-import { useMemo, useRef, useState } from 'react'
-import { createPendingCheckout, downloadPurchaseOrderPdf } from '../checkout/checkoutApi'
-import type { CheckoutCustomer } from '../checkout/checkoutTypes'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Product } from '../data/products'
 import type { CartItem } from '../lib/home'
 import { useI18n } from '../i18n'
 
+export const CHECKOUT_CART_KEY = 'art-syntex:checkout-cart:v1'
+
+function readStoredCart(): CartItem[] {
+  try {
+    const raw = window.localStorage.getItem(CHECKOUT_CART_KEY)
+    if (!raw) return []
+    const value: unknown = JSON.parse(raw)
+    if (!Array.isArray(value)) return []
+    return value.filter((item): item is CartItem =>
+      Boolean(item && typeof item === 'object' &&
+        'product' in item && 'quantity' in item &&
+        typeof item.quantity === 'number' && Number.isInteger(item.quantity) &&
+        item.quantity > 0 && item.quantity <= 20 &&
+        item.product && typeof item.product === 'object' &&
+        typeof item.product.id === 'string'),
+    )
+  } catch {
+    return []
+  }
+}
+
 export function useCart() {
   const { t } = useI18n()
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>(() => readStoredCart())
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null)
-  const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const [isCheckingOut] = useState(false)
   const checkoutInProgress = useRef(false)
+
+  useEffect(() => {
+    window.localStorage.setItem(CHECKOUT_CART_KEY, JSON.stringify(cart))
+  }, [cart])
+
+  useEffect(() => {
+    const syncCart = (event: StorageEvent) => {
+      if (event.key === CHECKOUT_CART_KEY) setCart(readStoredCart())
+    }
+    window.addEventListener('storage', syncCart)
+    return () => window.removeEventListener('storage', syncCart)
+  }, [])
 
   const cartTotal = useMemo(
     () => cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0),
@@ -25,7 +56,7 @@ export function useCart() {
       const existing = currentCart.find((item) => item.product.id === product.id)
       if (existing) {
         return currentCart.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+          item.product.id === product.id ? { ...item, quantity: Math.min(20, item.quantity + 1) } : item,
         )
       }
       return [...currentCart, { product, quantity: 1 }]
@@ -35,7 +66,7 @@ export function useCart() {
   const increaseQuantity = (productId: string) => {
     setPurchaseMessage(null)
     setCart((currentCart) => currentCart.map((item) =>
-      item.product.id === productId ? { ...item, quantity: item.quantity + 1 } : item,
+      item.product.id === productId ? { ...item, quantity: Math.min(20, item.quantity + 1) } : item,
     ))
   }
 
@@ -54,57 +85,21 @@ export function useCart() {
   const openCart = () => setIsCartOpen(true)
   const closeCart = () => setIsCartOpen(false)
 
-  const checkout = async (customer: CheckoutCustomer) => {
-    if (checkoutInProgress.current) return
-    setPurchaseMessage(null)
-
+  const openCheckout = () => {
     if (cart.length === 0) {
       setPurchaseMessage('Agregá al menos un producto para continuar.')
       return
     }
-
-    checkoutInProgress.current = true
-    setIsCheckingOut(true)
-
-    try {
-      const result = await createPendingCheckout(cart.map(({ product, quantity }) => ({
-        productId: product.id,
-        quantity,
-      })), customer)
-
-      let pdfDownloaded = false
-      if (result.pdfReady && result.pdfBase64) {
-        try {
-          downloadPurchaseOrderPdf(result.pdfBase64, result.pdfFileName)
-          pdfDownloaded = true
-        } catch {
-          pdfDownloaded = false
-        }
-      }
-
-      setCart([])
-      if (pdfDownloaded && result.emailDelivery?.customer) {
-        setPurchaseMessage(t('purchaseOrderReady'))
-      } else if (pdfDownloaded) {
-        setPurchaseMessage(t('purchaseOrderEmailPending'))
-      } else if (result.emailDelivery?.customer) {
-        setPurchaseMessage(t('purchaseOrderPdfPendingEmailSent'))
-      } else {
-        setPurchaseMessage(t('purchaseOrderPdfPending'))
-      }
-    } catch (error) {
-      setPurchaseMessage(error instanceof Error
-        ? error.message
-        : 'No pudimos iniciar el checkout. Volvé a intentarlo en unos minutos.')
-    } finally {
-      checkoutInProgress.current = false
-      setIsCheckingOut(false)
-    }
+    window.localStorage.setItem(CHECKOUT_CART_KEY, JSON.stringify(
+      cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
+    ))
+    window.open('/checkout', '_blank', 'noopener,noreferrer')
+    setIsCartOpen(false)
   }
 
   return {
-    addToCart, cart, cartCount, cartTotal, checkout, closeCart, decreaseQuantity,
-    increaseQuantity, isCartOpen, isCheckingOut, openCart, purchaseMessage,
+    addToCart, cart, cartCount, cartTotal, closeCart, decreaseQuantity,
+    increaseQuantity, isCartOpen, isCheckingOut, openCart, openCheckout, purchaseMessage,
     removeFromCart, setPurchaseMessage,
   }
 }

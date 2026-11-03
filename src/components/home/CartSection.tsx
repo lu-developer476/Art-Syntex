@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
 import type { User } from 'firebase/auth'
-import type { CheckoutCustomer } from '../../checkout/checkoutTypes'
 import type { CartItem } from '../../lib/home'
 import { formatPrice } from '../../lib/home'
 import { useI18n } from '../../i18n'
@@ -12,7 +10,7 @@ interface CartSectionProps {
   isOpen: boolean
   isCheckingOut: boolean
   message: string | null
-  onCheckout: (customer: CheckoutCustomer) => Promise<void>
+  onOpenCheckout: () => void
   onClose: () => void
   onDecreaseQuantity: (productId: string) => void
   onIncreaseQuantity: (productId: string) => void
@@ -27,7 +25,7 @@ export default function CartSection({
   isOpen,
   isCheckingOut,
   message,
-  onCheckout,
+  onOpenCheckout,
   onClose,
   onDecreaseQuantity,
   onIncreaseQuantity,
@@ -35,17 +33,6 @@ export default function CartSection({
   user,
 }: CartSectionProps) {
   const { t } = useI18n()
-  const [customerName, setCustomerName] = useState('')
-  const [customerEmail, setCustomerEmail] = useState('')
-
-  useEffect(() => {
-    if (user?.displayName) setCustomerName(user.displayName)
-    if (user?.email) setCustomerEmail(user.email)
-  }, [user?.uid, user?.displayName, user?.email])
-
-  const submitCheckout = () => {
-    void onCheckout({ name: customerName.trim(), email: customerEmail.trim() })
-  }
 
   return (
     <>
@@ -63,121 +50,49 @@ export default function CartSection({
             <p className="text-xs uppercase tracking-[0.35em] text-purple-300/70">Carrito</p>
             <h3 className="mt-2 text-2xl font-semibold text-purple-100">Vista previa</h3>
             <p className="mt-2 text-sm text-purple-200">
-              {cartCount === 0
-                ? 'No se han agregado productos al carrito.'
-                : `${cartCount} item${cartCount === 1 ? '' : 's'} · ${formatPrice(cartTotal)}`}
+              {cartCount === 0 ? 'No se han agregado productos al carrito.' : `${cartCount} item${cartCount === 1 ? '' : 's'} · ${formatPrice(cartTotal)}`}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-purple-300/40 px-3 py-2 text-sm text-purple-100 transition hover:bg-purple-900/50"
-          >
-            Cerrar
-          </button>
+          <button type="button" onClick={onClose} className="rounded-full border border-purple-300/40 px-3 py-2 text-sm text-purple-100 transition hover:bg-purple-900/50">Cerrar</button>
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
           {cart.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-purple-300/30 bg-purple-950/20 p-5 text-sm text-purple-200">
-              Añade otras mejoras para ver el resumen del carrito y avanzar al checkout.
+              Añade productos para ver el resumen y avanzar al checkout.
             </div>
-          ) : (
-            cart.map((item) => (
-              <article
-                key={item.product.id}
-                className="rounded-2xl border border-purple-300/30 bg-white/5 p-4 shadow-lg shadow-black/20"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h4 className="font-android text-lg text-purple-50">{item.product.name}</h4>
-                    <p className="mt-1 text-sm text-purple-300">{item.product.category}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveFromCart(item.product.id)}
-                    className="text-xs uppercase tracking-[0.2em] text-purple-300 transition hover:text-purple-100"
-                  >
-                    Quitar
-                  </button>
+          ) : cart.map((item) => (
+            <article key={item.product.id} className="rounded-2xl border border-purple-300/30 bg-white/5 p-4 shadow-lg shadow-black/20">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="font-android text-lg text-purple-50">{item.product.name}</h4>
+                  <p className="mt-1 text-sm text-purple-300">{item.product.category}</p>
                 </div>
-                <p className="mt-3 text-sm leading-6 text-purple-200">{item.product.description}</p>
-                <div className="mt-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 rounded-full border border-purple-300/30 px-2 py-1">
-                    <button
-                      type="button"
-                      onClick={() => onDecreaseQuantity(item.product.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-900/60 text-lg text-white transition hover:bg-purple-800"
-                      aria-label={`Quitar una unidad de ${item.product.name}`}
-                    >
-                      −
-                    </button>
-                    <span className="min-w-8 text-center text-sm font-semibold text-purple-50">{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => onIncreaseQuantity(item.product.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700 text-lg text-white transition hover:bg-purple-600"
-                      aria-label={`Agregar una unidad de ${item.product.name}`}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <span className="text-sm font-semibold text-purple-100">
-                    {formatPrice(item.product.price * item.quantity)}
-                  </span>
+                <button type="button" onClick={() => onRemoveFromCart(item.product.id)} className="text-xs uppercase tracking-[0.2em] text-purple-300 transition hover:text-purple-100">Quitar</button>
+              </div>
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2 rounded-full border border-purple-300/30 px-2 py-1">
+                  <button type="button" onClick={() => onDecreaseQuantity(item.product.id)} className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-900/60 text-lg text-white transition hover:bg-purple-800" aria-label={`Quitar una unidad de ${item.product.name}`}>−</button>
+                  <span className="min-w-8 text-center text-sm font-semibold text-purple-50">{item.quantity}</span>
+                  <button type="button" onClick={() => onIncreaseQuantity(item.product.id)} disabled={item.quantity >= 20} className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-700 text-lg text-white transition hover:bg-purple-600 disabled:opacity-40" aria-label={`Agregar una unidad de ${item.product.name}`}>+</button>
                 </div>
-              </article>
-            ))
-          )}
+                <span className="text-sm font-semibold text-purple-100">{formatPrice(item.product.price * item.quantity)}</span>
+              </div>
+            </article>
+          ))}
         </div>
 
         <div className="border-t border-purple-300/20 p-6">
           <div className="flex items-center justify-between text-sm text-purple-200">
-            <span>Subtotal</span>
-            <span className="font-semibold text-purple-100">{formatPrice(cartTotal)}</span>
+            <span>Subtotal</span><span className="font-semibold text-purple-100">{formatPrice(cartTotal)}</span>
           </div>
-          <div className="mt-5 space-y-3">
-            <p className="text-sm font-semibold text-purple-100">{t('checkoutCustomerTitle')}</p>
-            <label className="block space-y-1 text-sm text-purple-200">
-              <span>{t('checkoutCustomerName')}</span>
-              <input
-                type="text"
-                autoComplete="name"
-                required
-                minLength={2}
-                maxLength={120}
-                value={customerName}
-                onChange={(event) => setCustomerName(event.target.value)}
-                placeholder={t('checkoutCustomerNamePlaceholder')}
-                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/50 px-3 py-2.5 text-purple-50 outline-none placeholder:text-purple-300/50 focus:border-cyan-300"
-              />
-            </label>
-            <label className="block space-y-1 text-sm text-purple-200">
-              <span>{t('checkoutCustomerEmail')}</span>
-              <input
-                type="email"
-                autoComplete="email"
-                required
-                maxLength={254}
-                value={customerEmail}
-                onChange={(event) => setCustomerEmail(event.target.value)}
-                placeholder={t('checkoutCustomerEmailPlaceholder')}
-                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/50 px-3 py-2.5 text-purple-50 outline-none placeholder:text-purple-300/50 focus:border-cyan-300"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={submitCheckout}
-              disabled={cart.length === 0 || isCheckingOut || customerName.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())}
-              className="w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-950 disabled:text-purple-300"
-            >
-              {isCheckingOut ? t('processing') : t('checkout')}
-            </button>
-            <p className="text-xs leading-5 text-purple-300">
-              {t('checkoutGuestHint')} {' '}
-              <a href="/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">{t('checkoutCreateAccount')}</a>
-            </p>
-          </div>
+          <button type="button" onClick={onOpenCheckout} disabled={cart.length === 0 || isCheckingOut} className="mt-5 w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-950 disabled:text-purple-300">
+            {t('checkout')} ↗
+          </button>
+          <p className="mt-3 text-xs leading-5 text-purple-300">
+            {user ? `Sesión iniciada: ${user.email ?? 'cuenta autenticada'}.` : 'Podés continuar como invitado, sin crear una cuenta.'}{' '}
+            <a href="/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">{t('checkoutCreateAccount')}</a>
+          </p>
           {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
         </div>
       </aside>

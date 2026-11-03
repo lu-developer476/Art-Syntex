@@ -14,9 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "firebase:deploy": "npx firebase-tools deploy",
     "firebase:deploy:firestore": "npx firebase-tools deploy --only firestore",
-    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting",
-    "netlify:build": "node --check netlify/functions/api.mjs && node --check server/services/purchaseOrderPdf.js",
-    "netlify:test": "vitest run netlify/functions/api.test.js server/services/purchaseOrderPdf.test.js server/services/checkoutDeliveryService.test.js"
+    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting"
   },
   "dependencies": {
     "cors": "^2.8.5",

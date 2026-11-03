@@ -29,7 +29,7 @@ export default function ProductsPageSection() {
         isOpen={cart.isCartOpen}
         isCheckingOut={cart.isCheckingOut}
         message={cart.purchaseMessage}
-        onCheckout={cart.checkout}
+        onOpenCheckout={cart.openCheckout}
         onClose={cart.closeCart}
         onDecreaseQuantity={cart.decreaseQuantity}
         onIncreaseQuantity={cart.increaseQuantity}

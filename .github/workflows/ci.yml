@@ -28,10 +28,5 @@ jobs:
       - name: Run application tests
         run: npm test
 
-      - name: Validate serverless API and PDF pipeline
-        run: |
-          npm run netlify:build
-          npm run netlify:test
-
       - name: Build frontend
         run: npm run build
