@@ -33,6 +33,9 @@ describe('Express application', () => {
       auth: { verifyIdToken: vi.fn() },
       db: {},
     },
+    checkoutDeliveryService: {
+      createPendingOrder: vi.fn().mockResolvedValue({ orderId: 'AS-GUEST-001', status: 'pending' }),
+    },
   })
 
   it('exposes a health endpoint without requiring SMTP or Firebase Admin credentials', async () => {
@@ -97,6 +100,34 @@ describe('Express application', () => {
 
     expect(response.status).toBe(400)
     expect(dependencies.newsletterService.subscribe).not.toHaveBeenCalled()
+  })
+
+  it('accepts checkout as a guest without an Authorization header', async () => {
+    const dependencies = createTestDependencies()
+    const app = createApp(config, dependencies)
+
+    const response = await new Promise((resolve) => {
+      const server = app.listen(0, () => {
+        fetch(`http://127.0.0.1:${server.address().port}/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer: { name: 'Guest Buyer', email: 'guest@example.com' },
+            items: [{ productId: 'sandevistan', quantity: 1 }],
+          }),
+        })
+          .then(async (res) => resolve({ status: res.status, body: await res.json() }))
+          .finally(() => server.close())
+      })
+    })
+
+    expect(response.status).toBe(201)
+    expect(response.body.orderId).toBe('AS-GUEST-001')
+    expect(dependencies.checkoutDeliveryService.createPendingOrder).toHaveBeenCalledWith({
+      firebaseUser: null,
+      customer: { name: 'Guest Buyer', email: 'guest@example.com' },
+      items: [{ productId: 'sandevistan', quantity: 1 }],
+    })
   })
 
   it('returns a consistent 404 response for unknown routes', async () => {
