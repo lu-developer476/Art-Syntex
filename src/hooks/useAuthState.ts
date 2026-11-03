@@ -20,12 +20,16 @@ export function useAuthState() {
   const [authEmail, setAuthEmail] = useState('')
   const [authPassword, setAuthPassword] = useState('')
   const [user, setUser] = useState<User | null>(null)
+  const [isAuthInitializing, setIsAuthInitializing] = useState(true)
   const [authMessage, setAuthMessage] = useState<string | null>(null)
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
   const [isAuthLoading, setIsAuthLoading] = useState(false)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, setUser)
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setUser(nextUser)
+      setIsAuthInitializing(false)
+    })
     return () => unsubscribe()
   }, [])
 
@@ -116,6 +120,7 @@ export function useAuthState() {
     authMessage,
     authPassword,
     isAuthenticated: Boolean(user),
+    isAuthInitializing,
     isAuthLoading,
     isRegisterModalOpen,
     setAuthEmail,

@@ -28,6 +28,7 @@ export default function ProductsPageSection() {
         cartTotal={cart.cartTotal}
         isOpen={cart.isCartOpen}
         isCheckingOut={cart.isCheckingOut}
+        isAuthInitializing={auth.isAuthInitializing}
         message={cart.purchaseMessage}
         onCheckout={() => cart.checkout(auth.user)}
         onClose={cart.closeCart}

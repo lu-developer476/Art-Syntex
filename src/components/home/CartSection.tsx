@@ -9,6 +9,7 @@ interface CartSectionProps {
   cartTotal: number
   isOpen: boolean
   isCheckingOut: boolean
+  isAuthInitializing: boolean
   message: string | null
   onCheckout: () => Promise<void>
   onClose: () => void
@@ -24,6 +25,7 @@ export default function CartSection({
   cartTotal,
   isOpen,
   isCheckingOut,
+  isAuthInitializing,
   message,
   onCheckout,
   onClose,
@@ -126,13 +128,16 @@ export default function CartSection({
           <button
             type="button"
             onClick={() => void onCheckout()}
-            disabled={!user || cart.length === 0 || isCheckingOut}
+            disabled={isAuthInitializing || cart.length === 0 || isCheckingOut}
             className="mt-5 w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-950 disabled:text-purple-300"
           >
-            {isCheckingOut ? t('processing') : t('checkout')}
+            {isAuthInitializing ? t('processing') : isCheckingOut ? t('processing') : user ? t('checkout') : t('loginCheckout')}
           </button>
-          {!user ? (
-            <p className="mt-3 text-sm text-purple-300">Ingresar a la red para completar el checkout.</p>
+          {!user && !isAuthInitializing ? (
+            <p className="mt-3 text-sm text-purple-300">
+              Iniciá sesión para continuar. Podés abrir Acceso en otra pestaña y volver acá; el carrito permanecerá disponible.
+              {' '}<a href="/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Abrir Acceso</a>.
+            </p>
           ) : null}
           {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
         </div>
