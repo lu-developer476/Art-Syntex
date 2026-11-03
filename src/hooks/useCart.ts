@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Product } from '../data/products'
+import { useEffect, useMemo, useState } from 'react'
+import { getProductSeedById, isProductId, type Product } from '../data/products'
 import type { CartItem } from '../lib/home'
-import { useI18n } from '../i18n'
 
 export const CHECKOUT_CART_KEY = 'art-syntex:checkout-cart:v1'
 
@@ -11,29 +10,32 @@ function readStoredCart(): CartItem[] {
     if (!raw) return []
     const value: unknown = JSON.parse(raw)
     if (!Array.isArray(value)) return []
-    return value.filter((item): item is CartItem =>
-      Boolean(item && typeof item === 'object' &&
-        'product' in item && 'quantity' in item &&
-        typeof item.quantity === 'number' && Number.isInteger(item.quantity) &&
-        item.quantity > 0 && item.quantity <= 20 &&
-        item.product && typeof item.product === 'object' &&
-        typeof item.product.id === 'string'),
-    )
+    return value.flatMap((item): CartItem[] => {
+      if (!item || typeof item !== 'object') return []
+      const record = item as { productId?: unknown; quantity?: unknown; product?: Product }
+      if (!Number.isInteger(record.quantity) || Number(record.quantity) < 1 || Number(record.quantity) > 20) return []
+      if (isProductId(record.productId)) {
+        return [{ product: getProductSeedById(record.productId), quantity: Number(record.quantity) }]
+      }
+      if (record.product && isProductId(record.product.id)) {
+        return [{ product: getProductSeedById(record.product.id), quantity: Number(record.quantity) }]
+      }
+      return []
+    })
   } catch {
     return []
   }
 }
 
 export function useCart() {
-  const { t } = useI18n()
   const [cart, setCart] = useState<CartItem[]>(() => readStoredCart())
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null)
-  const [isCheckingOut] = useState(false)
-  const checkoutInProgress = useRef(false)
 
   useEffect(() => {
-    window.localStorage.setItem(CHECKOUT_CART_KEY, JSON.stringify(cart))
+    window.localStorage.setItem(CHECKOUT_CART_KEY, JSON.stringify(
+      cart.map(({ product, quantity }) => ({ productId: product.id, quantity })),
+    ))
   }, [cart])
 
   useEffect(() => {
@@ -99,7 +101,7 @@ export function useCart() {
 
   return {
     addToCart, cart, cartCount, cartTotal, closeCart, decreaseQuantity,
-    increaseQuantity, isCartOpen, isCheckingOut, openCart, openCheckout, purchaseMessage,
+    increaseQuantity, isCartOpen, isCheckingOut: false, openCart, openCheckout, purchaseMessage,
     removeFromCart, setPurchaseMessage,
   }
 }
