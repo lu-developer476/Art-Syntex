@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import type { User } from 'firebase/auth'
+import type { CheckoutCustomer } from '../../checkout/checkoutTypes'
 import type { CartItem } from '../../lib/home'
 import { formatPrice } from '../../lib/home'
 import { useI18n } from '../../i18n'
@@ -9,9 +11,8 @@ interface CartSectionProps {
   cartTotal: number
   isOpen: boolean
   isCheckingOut: boolean
-  isAuthInitializing: boolean
   message: string | null
-  onCheckout: () => Promise<void>
+  onCheckout: (customer: CheckoutCustomer) => Promise<void>
   onClose: () => void
   onDecreaseQuantity: (productId: string) => void
   onIncreaseQuantity: (productId: string) => void
@@ -25,7 +26,6 @@ export default function CartSection({
   cartTotal,
   isOpen,
   isCheckingOut,
-  isAuthInitializing,
   message,
   onCheckout,
   onClose,
@@ -35,6 +35,17 @@ export default function CartSection({
   user,
 }: CartSectionProps) {
   const { t } = useI18n()
+  const [customerName, setCustomerName] = useState('')
+  const [customerEmail, setCustomerEmail] = useState('')
+
+  useEffect(() => {
+    if (user?.displayName) setCustomerName(user.displayName)
+    if (user?.email) setCustomerEmail(user.email)
+  }, [user?.uid, user?.displayName, user?.email])
+
+  const submitCheckout = () => {
+    void onCheckout({ name: customerName.trim(), email: customerEmail.trim() })
+  }
 
   return (
     <>
@@ -125,26 +136,48 @@ export default function CartSection({
             <span>Subtotal</span>
             <span className="font-semibold text-purple-100">{formatPrice(cartTotal)}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => void onCheckout()}
-            disabled={isAuthInitializing || cart.length === 0 || isCheckingOut || Boolean(user && !user.emailVerified)}
-            className="mt-5 w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-950 disabled:text-purple-300"
-          >
-            {isAuthInitializing || isCheckingOut ? t('processing') : user && !user.emailVerified ? t('checkoutVerifyEmail') : user ? t('checkout') : t('loginCheckout')}
-          </button>
-          {user && !user.emailVerified ? (
-            <p className="mt-3 text-sm text-amber-200">
-              {t('checkoutVerifyEmailHint')}{' '}
-              <a href="/verificar-email" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Abrir centro de verificación</a>.
+          <div className="mt-5 space-y-3">
+            <p className="text-sm font-semibold text-purple-100">{t('checkoutCustomerTitle')}</p>
+            <label className="block space-y-1 text-sm text-purple-200">
+              <span>{t('checkoutCustomerName')}</span>
+              <input
+                type="text"
+                autoComplete="name"
+                required
+                minLength={2}
+                maxLength={120}
+                value={customerName}
+                onChange={(event) => setCustomerName(event.target.value)}
+                placeholder={t('checkoutCustomerNamePlaceholder')}
+                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/50 px-3 py-2.5 text-purple-50 outline-none placeholder:text-purple-300/50 focus:border-cyan-300"
+              />
+            </label>
+            <label className="block space-y-1 text-sm text-purple-200">
+              <span>{t('checkoutCustomerEmail')}</span>
+              <input
+                type="email"
+                autoComplete="email"
+                required
+                maxLength={254}
+                value={customerEmail}
+                onChange={(event) => setCustomerEmail(event.target.value)}
+                placeholder={t('checkoutCustomerEmailPlaceholder')}
+                className="w-full rounded-xl border border-purple-300/40 bg-purple-950/50 px-3 py-2.5 text-purple-50 outline-none placeholder:text-purple-300/50 focus:border-cyan-300"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={submitCheckout}
+              disabled={cart.length === 0 || isCheckingOut || customerName.trim().length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())}
+              className="w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-950 disabled:text-purple-300"
+            >
+              {isCheckingOut ? t('processing') : t('checkout')}
+            </button>
+            <p className="text-xs leading-5 text-purple-300">
+              {t('checkoutGuestHint')} {' '}
+              <a href="/acceso" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">{t('checkoutCreateAccount')}</a>
             </p>
-          ) : null}
-          {!user && !isAuthInitializing ? (
-            <p className="mt-3 text-sm text-purple-300">
-              Iniciá sesión para continuar. Podés abrir Acceso en otra pestaña y volver acá; el carrito permanecerá disponible.
-              {' '}<a href="/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Abrir Acceso</a>.
-            </p>
-          ) : null}
+          </div>
           {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
         </div>
       </aside>
