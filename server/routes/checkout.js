@@ -14,7 +14,7 @@ export function createCheckoutRouter(checkoutService, authServices) {
   router.post(
     '/',
     rateLimiter,
-    createFirebaseAuthenticator(authServices),
+    createFirebaseAuthenticator(authServices, { optional: true }),
     createCheckoutController(checkoutService),
   )
 
