@@ -9,48 +9,50 @@ function roundMoney(value) {
   return Math.round((value + Number.EPSILON) * 100) / 100
 }
 
+function checkoutError(message, statusCode = 400) {
+  const error = new Error(message)
+  error.statusCode = statusCode
+  return error
+}
+
 function validateItems(input) {
   if (!Array.isArray(input) || input.length === 0 || input.length > MAX_ITEMS) {
-    const error = new Error('Invalid checkout items.')
-    error.statusCode = 400
-    throw error
+    throw checkoutError('Invalid checkout items.')
   }
 
   const merged = new Map()
-
   for (const item of input) {
     const productId = item?.productId
     const quantity = item?.quantity
-
     if (typeof productId !== 'string' || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
-      const error = new Error('Invalid product or quantity.')
-      error.statusCode = 400
-      throw error
+      throw checkoutError('Invalid product or quantity.')
     }
-
     merged.set(productId, (merged.get(productId) ?? 0) + quantity)
   }
 
   if ([...merged.values()].some((quantity) => quantity > MAX_QUANTITY)) {
-    const error = new Error('Maximum quantity per product is 20.')
-    error.statusCode = 400
-    throw error
+    throw checkoutError('Maximum quantity per product is 20.')
   }
-
   return [...merged.entries()]
 }
 
+function validateCustomer(customer) {
+  const name = typeof customer?.name === 'string' ? customer.name.trim() : ''
+  const email = typeof customer?.email === 'string' ? customer.email.trim().toLowerCase() : ''
+
+  if (name.length < 2 || name.length > 120) {
+    throw checkoutError('Ingresá tu nombre (entre 2 y 120 caracteres).')
+  }
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw checkoutError('Ingresá una dirección de correo válida.')
+  }
+  return { name, email }
+}
+
 export function createCheckoutService(services) {
-  async function createPendingOrder({ idToken, items }) {
-    const { auth, db } = services ?? getAdminServices()
-    const decodedToken = await auth.verifyIdToken(idToken)
-
-    if (!decodedToken.email_verified || typeof decodedToken.email !== 'string' || !decodedToken.email.trim()) {
-      const error = new Error('A verified email address is required before checkout.')
-      error.statusCode = 403
-      throw error
-    }
-
+  async function createPendingOrder({ firebaseUser = null, customer, items }) {
+    const { db } = services ?? getAdminServices()
+    const { name: customerName, email: customerEmail } = validateCustomer(customer)
     const normalizedItems = validateItems(items)
     const catalogSnapshot = await db.collection('products').get()
     const products = new Map(catalogSnapshot.docs.map((snapshot) => {
@@ -59,25 +61,17 @@ export function createCheckoutService(services) {
       return [productId, data]
     }))
 
-    // The UI uses the same local demo seed when the Firestore catalog has not been seeded yet.
-    // Keep checkout available in that state, but prefer Firestore prices whenever documents exist.
     if (catalogSnapshot.empty) {
       for (const product of fallbackCatalog) products.set(product.id, product)
     }
 
     const lines = normalizedItems.map(([productId, quantity]) => {
       const product = products.get(productId)
-      if (!product) {
-        const error = new Error('Product ' + productId + ' is unavailable.')
-        error.statusCode = 409
-        throw error
-      }
+      if (!product) throw checkoutError('Product ' + productId + ' is unavailable.', 409)
 
       const unitPrice = Number(product.price)
       if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-        const error = new Error('Product ' + productId + ' has an invalid price.')
-        error.statusCode = 500
-        throw error
+        throw checkoutError('Product ' + productId + ' has an invalid price.', 500)
       }
 
       return {
@@ -91,15 +85,13 @@ export function createCheckoutService(services) {
 
     const total = roundMoney(lines.reduce((sum, line) => sum + line.lineTotal, 0))
     const orderRef = db.collection('purchaseOrders').doc()
-    const customerEmail = decodedToken.email.trim().toLowerCase()
-    const customerName = typeof decodedToken.name === 'string' && decodedToken.name.trim()
-      ? decodedToken.name.trim().slice(0, 120)
-      : 'Cliente de Art-Syntex'
     const createdAt = new Date().toISOString()
 
     await orderRef.set({
-      uid: decodedToken.uid,
+      uid: firebaseUser?.uid ?? null,
+      customerType: firebaseUser ? 'registered' : 'guest',
       email: customerEmail,
+      customerName,
       status: 'pending',
       paymentStatus: 'unpaid',
       currency: 'USD',
@@ -119,6 +111,7 @@ export function createCheckoutService(services) {
       orderId: orderRef.id,
       customerEmail,
       customerName,
+      customerType: firebaseUser ? 'registered' : 'guest',
       items: lines,
       subtotal: total,
       total,
