@@ -17,9 +17,14 @@ describe('checkout delivery service', () => {
     }
     const service = createCheckoutDeliveryService(checkoutService, emailService)
 
-    const result = await service.createPendingOrder({ idToken: 'token', items: [] })
+    const checkoutInput = {
+      firebaseUser: null,
+      customer: { name: 'Cliente', email: 'buyer@example.com' },
+      items: [{ productId: 'implante', quantity: 1 }],
+    }
+    const result = await service.createPendingOrder(checkoutInput)
 
-    expect(checkoutService.createPendingOrder).toHaveBeenCalledWith({ idToken: 'token', items: [] })
+    expect(checkoutService.createPendingOrder).toHaveBeenCalledWith(checkoutInput)
     expect(emailService.sendPurchaseOrderEmails).toHaveBeenCalledWith(expect.objectContaining({
       order,
       fileName: 'orden-de-compra-AS-ORDER-001.pdf',
@@ -45,7 +50,11 @@ describe('checkout delivery service', () => {
     const checkoutService = { createPendingOrder: vi.fn().mockResolvedValue(order) }
     const service = createCheckoutDeliveryService(checkoutService, null)
 
-    const result = await service.createPendingOrder({ idToken: 'token', items: [] })
+    const result = await service.createPendingOrder({
+      firebaseUser: null,
+      customer: { name: 'Cliente', email: 'buyer@example.com' },
+      items: [{ productId: 'implante', quantity: 1 }],
+    })
 
     expect(result.pdfReady).toBe(true)
     expect(result.emailDelivery).toEqual({ internal: false, customer: false })
