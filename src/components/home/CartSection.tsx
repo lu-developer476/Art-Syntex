@@ -90,8 +90,14 @@ export default function CartSection({
             {t('checkout')} ↗
           </button>
           <p className="mt-3 text-xs leading-5 text-purple-300">
-            {user ? `Sesión iniciada: ${user.email ?? 'cuenta autenticada'}.` : 'Podés continuar como invitado, sin crear una cuenta.'}{' '}
-            <a href="/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">{t('checkoutCreateAccount')}</a>
+            {user ? (
+              `Sesión iniciada: ${user.email ?? 'cuenta autenticada'}.`
+            ) : (
+              <>
+                Podés continuar como invitado o{' '}
+                <a href="https://art-syntex.web.app/acceso" target="_blank" rel="noreferrer" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">crear una cuenta</a>
+              </>
+            )}
           </p>
           {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
         </div>
