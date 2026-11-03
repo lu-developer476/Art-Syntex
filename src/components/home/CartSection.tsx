@@ -128,11 +128,17 @@ export default function CartSection({
           <button
             type="button"
             onClick={() => void onCheckout()}
-            disabled={isAuthInitializing || cart.length === 0 || isCheckingOut}
+            disabled={isAuthInitializing || cart.length === 0 || isCheckingOut || Boolean(user && !user.emailVerified)}
             className="mt-5 w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-950 disabled:text-purple-300"
           >
-            {isAuthInitializing ? t('processing') : isCheckingOut ? t('processing') : user ? t('checkout') : t('loginCheckout')}
+            {isAuthInitializing || isCheckingOut ? t('processing') : user && !user.emailVerified ? t('checkoutVerifyEmail') : user ? t('checkout') : t('loginCheckout')}
           </button>
+          {user && !user.emailVerified ? (
+            <p className="mt-3 text-sm text-amber-200">
+              {t('checkoutVerifyEmailHint')}{' '}
+              <a href="/verificar-email" className="font-semibold text-cyan-300 underline underline-offset-2 hover:text-cyan-200">Abrir centro de verificación</a>.
+            </p>
+          ) : null}
           {!user && !isAuthInitializing ? (
             <p className="mt-3 text-sm text-purple-300">
               Iniciá sesión para continuar. Podés abrir Acceso en otra pestaña y volver acá; el carrito permanecerá disponible.

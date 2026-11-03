@@ -7,6 +7,7 @@ import { useI18n } from '../i18n'
 interface PurchaseUser {
   uid: string
   email: string | null
+  emailVerified: boolean
 }
 
 export function useCart() {
@@ -77,6 +78,11 @@ export function useCart() {
 
     if (!user.email) {
       setPurchaseMessage('No pudimos iniciar el checkout porque tu cuenta no tiene un correo válido.')
+      return
+    }
+
+    if (!user.emailVerified) {
+      setPurchaseMessage(t('checkoutVerifyEmailHint'))
       return
     }
 
