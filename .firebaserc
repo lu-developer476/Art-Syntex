@@ -1,12 +1,12 @@
 {
   "projects": {
-    "default": "art-synt-13037"
+    "default": "art-syntex"
   },
   "targets": {
-    "art-synt-13037": {
+    "art-syntex": {
       "hosting": {
         "production": [
-          "art-synt-13037"
+          "art-syntex"
         ]
       }
     }
