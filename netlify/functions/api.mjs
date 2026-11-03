@@ -205,19 +205,32 @@ export async function handleRequest(request, context = {}) {
       return response(200, { success: true, requestId }, corsHeaders)
     }
 
+    const adminServices = getFirebaseAdmin()
     const authorization = request.headers.get('authorization') || ''
-    if (!authorization.startsWith('Bearer ')) {
-      return response(401, { success: false, error: 'Authentication required.', requestId }, corsHeaders)
+    let firebaseUser = null
+
+    // A Firebase session is optional: guests can place orders with the
+    // customer details supplied by the checkout form.
+    if (authorization) {
+      if (!authorization.startsWith('Bearer ')) {
+        return response(401, { success: false, error: 'Invalid authentication token.', requestId }, corsHeaders)
+      }
+
+      try {
+        firebaseUser = await adminServices.auth.verifyIdToken(authorization.slice(7))
+      } catch {
+        return response(401, { success: false, error: 'Invalid authentication token.', requestId }, corsHeaders)
+      }
     }
 
-    const adminServices = getFirebaseAdmin()
     const checkoutService = createCheckoutService(adminServices)
     const deliveryService = createCheckoutDeliveryService(
       checkoutService,
       getEmailService(false),
     )
     const result = await deliveryService.createPendingOrder({
-      idToken: authorization.slice(7),
+      firebaseUser,
+      customer: payload.customer,
       items: payload.items,
     })
 
