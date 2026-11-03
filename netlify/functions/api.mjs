@@ -112,7 +112,9 @@ function getEmailService(required = true) {
   return emailService
 }
 
-function getFirebaseAdmin() {
+function getFirebaseAdmin(context = {}) {
+  if (context.adminServices) return context.adminServices
+
   try {
     return getAdminServices()
   } catch {
@@ -205,7 +207,7 @@ export async function handleRequest(request, context = {}) {
       return response(200, { success: true, requestId }, corsHeaders)
     }
 
-    const adminServices = getFirebaseAdmin()
+    const adminServices = getFirebaseAdmin(context)
     const authorization = request.headers.get('authorization') || ''
     let firebaseUser = null
 
