@@ -2,7 +2,8 @@ export function createCheckoutController(checkoutDeliveryService) {
   return async function checkoutController(req, res, next) {
     try {
       const result = await checkoutDeliveryService.createPendingOrder({
-        idToken: req.get('authorization').slice(7),
+        firebaseUser: req.firebaseUser ?? null,
+        customer: req.body?.customer,
         items: req.body?.items,
       })
 
