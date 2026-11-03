@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
-import { auth } from '../firebase/config'
+import { useEffect, useMemo, useState } from 'react'
 import { getProductSeedById, isProductId, type ProductId } from '../data/products'
 import { formatPrice } from '../lib/home'
 import { CHECKOUT_CART_KEY } from '../hooks/useCart'
+import { useAuthState } from '../hooks/useAuthState'
+import { createPurchaseOrder } from '../firebase/commerce'
+import { db } from '../firebase/config'
 
 type StoredCartLine = { productId: ProductId; quantity: number }
 
@@ -22,11 +24,19 @@ function readCart(): StoredCartLine[] {
 }
 
 export default function Checkout() {
+  const { user, isAuthInitializing } = useAuthState()
   const [cart, setCart] = useState<StoredCartLine[]>(readCart)
-  const [name, setName] = useState(auth.currentUser?.displayName ?? '')
-  const [email, setEmail] = useState(auth.currentUser?.email ?? '')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [orderId, setOrderId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    setName((current) => current || user.displayName || '')
+    setEmail((current) => current || user.email || '')
+  }, [user])
 
   const lines = useMemo(() => cart.map(({ productId, quantity }) => {
     const product = getProductSeedById(productId)
@@ -44,7 +54,7 @@ export default function Checkout() {
     })
   }
 
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
     if (!lines.length) {
@@ -56,40 +66,34 @@ export default function Checkout() {
       return
     }
 
-    const id = `AS-${Date.now().toString(36).toUpperCase()}`
-    const order = {
-      id,
-      customer: { name: name.trim(), email: email.trim() },
-      userId: auth.currentUser?.uid ?? null,
-      status: 'pending' as const,
-      currency: 'USD' as const,
-      items: lines.map(({ product, quantity, subtotal }) => ({
-        productId: product.id, name: product.name, unitPrice: product.price, quantity, lineTotal: subtotal,
-      })),
-      total,
-      createdAt: new Date().toISOString(),
-      persistence: 'local-demo',
-    }
+    setIsSubmitting(true)
     try {
-      const key = 'art-syntex:demo-orders:v1'
-      const previous = JSON.parse(window.localStorage.getItem(key) ?? '[]')
-      const orders = Array.isArray(previous) ? previous : []
-      window.localStorage.setItem(key, JSON.stringify([...orders, order]))
+      const id = await createPurchaseOrder(
+        db,
+        user?.uid ?? null,
+        name,
+        email,
+        lines.map(({ product, quantity }) => ({ product, quantity })),
+      )
       window.localStorage.removeItem(CHECKOUT_CART_KEY)
       setCart([])
       setOrderId(id)
-    } catch {
-      setError('No se pudo guardar la orden en este navegador. Revisá el espacio disponible e intentá otra vez.')
+    } catch (checkoutError) {
+      setError(checkoutError instanceof Error
+        ? checkoutError.message
+        : 'No se pudo registrar tu orden. Intentá nuevamente.')
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
   if (orderId) {
     return (
       <section className="mx-auto max-w-3xl rounded-3xl border border-emerald-300/30 bg-black/60 p-8 text-center shadow-2xl">
-        <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">Solicitud registrada · Demo</p>
-        <h1 className="mt-4 text-3xl font-semibold text-white">Orden pendiente creada</h1>
-        <p className="mt-3 text-purple-100">Número de referencia: <strong>{orderId}</strong></p>
-        <p className="mt-4 text-sm leading-6 text-purple-200">Esta orden se guardó únicamente en el almacenamiento local de este navegador. No se envió a un servidor, no se realizó ningún cobro y no se envió ningún correo.</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">Orden registrada</p>
+        <h1 className="mt-4 text-3xl font-semibold text-white">¡Muchas gracias por tu compra!</h1>
+        <p className="mt-3 text-purple-100">Tu orden quedó registrada correctamente y está pendiente de confirmación.</p>
+        <p className="mt-4 text-sm text-purple-200">Número de orden: <strong>{orderId}</strong></p>
         <a href="/productos" className="mt-7 inline-flex rounded-xl bg-purple-700 px-5 py-3 font-semibold text-white hover:bg-purple-600">Volver a la tienda</a>
       </section>
     )
@@ -112,12 +116,11 @@ export default function Checkout() {
           <label className="block space-y-2 text-sm text-purple-200">Correo electrónico
             <input required type="email" maxLength={254} autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-xl border border-purple-300/40 bg-purple-950/50 px-4 py-3 text-white outline-none focus:border-cyan-300" />
           </label>
-          {auth.currentUser ? <p className="text-xs text-cyan-200">Sesión iniciada como {auth.currentUser.email}. La compra no requiere cerrar sesión.</p> : <p className="text-xs text-purple-300">Estás comprando como invitado.</p>}
-          <div className="rounded-xl border border-amber-300/30 bg-amber-950/20 p-4 text-xs leading-5 text-amber-100">
-            Modo demostración: la orden queda guardada en este navegador. No se procesa un pago ni se registra en una base de datos remota.
-          </div>
+          {user ? <p className="text-xs text-cyan-200">Sesión iniciada como {user.email}. La compra se asociará a tu cuenta.</p> : <p className="text-xs text-purple-300">Estás comprando como invitado.</p>}
           {error ? <p role="alert" className="text-sm text-red-300">{error}</p> : null}
-          <button type="submit" disabled={!cart.length} className="w-full rounded-xl bg-purple-700 px-5 py-3 font-semibold text-white transition hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-40">Crear orden pendiente · {formatPrice(total)}</button>
+          <button type="submit" disabled={!cart.length || isSubmitting || isAuthInitializing} className="w-full rounded-xl bg-purple-700 px-5 py-3 font-semibold text-white transition hover:bg-purple-600 disabled:cursor-not-allowed disabled:opacity-40">
+            {isSubmitting ? 'Registrando orden…' : 'Confirmar compra · ' + formatPrice(total)}
+          </button>
         </form>
 
         <aside className="h-fit rounded-3xl border border-purple-300/30 bg-black/50 p-6">
@@ -130,9 +133,9 @@ export default function Checkout() {
                   <h3 className="font-medium text-purple-50">{product.name}</h3>
                   <p className="mt-1 text-sm text-purple-300">{formatPrice(product.price)} c/u</p>
                   <div className="mt-2 flex items-center gap-3 text-sm">
-                    <button type="button" onClick={() => updateQuantity(product.id, -1)} className="rounded border border-purple-300/40 px-2 text-white" aria-label={`Quitar una unidad de ${product.name}`}>−</button>
+                    <button type="button" onClick={() => updateQuantity(product.id, -1)} className="rounded border border-purple-300/40 px-2 text-white" aria-label={'Quitar una unidad de ' + product.name}>−</button>
                     <span className="text-white">{quantity}</span>
-                    <button type="button" onClick={() => updateQuantity(product.id, 1)} disabled={quantity >= 20} className="rounded border border-purple-300/40 px-2 text-white disabled:opacity-40" aria-label={`Agregar una unidad de ${product.name}`}>+</button>
+                    <button type="button" onClick={() => updateQuantity(product.id, 1)} disabled={quantity >= 20} className="rounded border border-purple-300/40 px-2 text-white disabled:opacity-40" aria-label={'Agregar una unidad de ' + product.name}>+</button>
                     <span className="ml-auto font-semibold text-purple-100">{formatPrice(subtotal)}</span>
                   </div>
                 </div>

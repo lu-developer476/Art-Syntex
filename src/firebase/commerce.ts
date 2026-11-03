@@ -38,24 +38,53 @@ export async function registerCustomerAccount(
 
 export async function createPurchaseOrder(
   db: Firestore,
-  uid: string,
+  uid: string | null,
+  customerName: string,
   email: string,
   cart: CartItem[],
-): Promise<void> {
-  const total = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0)
+): Promise<string> {
+  if (cart.length === 0 || cart.length > 10) {
+    throw new Error('El carrito no contiene productos válidos.')
+  }
 
-  await addDoc(collection(db, 'purchaseOrders'), {
+  const normalizedName = customerName.trim()
+  const normalizedEmail = email.trim().toLowerCase()
+  if (normalizedName.length < 2 || normalizedName.length > 120) {
+    throw new Error('Ingresá un nombre válido.')
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    throw new Error('Ingresá un correo electrónico válido.')
+  }
+
+  const items = cart.map(({ product, quantity }) => {
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+      throw new Error('La cantidad de un producto no es válida.')
+    }
+    const price = product.price
+    const subtotal = Math.round((price * quantity + Number.EPSILON) * 100) / 100
+    return {
+      productId: product.id,
+      name: product.name,
+      price,
+      quantity,
+      subtotal,
+    }
+  })
+
+  const total = Math.round((items.reduce((sum, item) => sum + item.subtotal, 0) + Number.EPSILON) * 100) / 100
+  const order = await addDoc(collection(db, 'purchaseOrders'), {
     uid,
-    email,
+    customerType: uid ? 'registered' : 'guest',
+    customerName: normalizedName,
+    email: normalizedEmail,
     status: 'pending',
+    paymentStatus: 'unpaid',
+    currency: 'USD',
+    items,
+    subtotal: total,
     total,
-    items: cart.map((item) => ({
-      productId: item.product.id,
-      name: item.product.name,
-      price: item.product.price,
-      quantity: item.quantity,
-      subtotal: item.product.price * item.quantity,
-    })),
     createdAt: serverTimestamp(),
   })
+
+  return order.id
 }

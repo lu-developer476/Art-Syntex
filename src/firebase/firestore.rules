@@ -24,15 +24,8 @@ service cloud.firestore {
     function isValidNewsletterSubscriptionUpdate() {
       return request.resource.data.keys().hasAll(['email', 'consent', 'source', 'consentedAt'])
         && request.resource.data.keys().hasOnly([
-          'email',
-          'consent',
-          'source',
-          'consentedAt',
-          'status',
-          'welcomeEmailStatus',
-          'welcomeEmailClaimedAt',
-          'welcomeEmailSentAt',
-          'updatedAt'
+          'email', 'consent', 'source', 'consentedAt', 'status',
+          'welcomeEmailStatus', 'welcomeEmailClaimedAt', 'welcomeEmailSentAt', 'updatedAt'
         ])
         && request.resource.data.email == resource.data.email
         && request.resource.data.email is string
@@ -43,10 +36,97 @@ service cloud.firestore {
         && request.resource.data.source == 'contact-page'
         && request.resource.data.consentedAt == request.time
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'consent',
-          'source',
-          'consentedAt'
+          'consent', 'source', 'consentedAt'
         ]);
+    }
+
+    function validOrderLine(item) {
+      let prices = {
+        'sandevistan': 3200,
+        'disk-ram': 850,
+        'mantis-blades': 2600,
+        'gorilla-arms': 2400,
+        'facial-cyberware': 1490,
+        'synaptic-reflector': 1750,
+        'projectile-ls': 2800,
+        'kiroshi-optics': 1320,
+        'atomic-sensors': 1190,
+        'visual-interface': 990
+      };
+      return item is map
+        && item.keys().hasAll(['productId', 'name', 'price', 'quantity', 'subtotal'])
+        && item.keys().hasOnly(['productId', 'name', 'price', 'quantity', 'subtotal'])
+        && item.productId is string
+        && item.productId in prices.keys()
+        && item.name is string
+        && item.name.size() >= 1
+        && item.name.size() <= 160
+        && item.price == prices[item.productId]
+        && item.quantity is int
+        && item.quantity >= 1
+        && item.quantity <= 20
+        && item.subtotal == item.price * item.quantity;
+    }
+
+    function validOrderItems() {
+      let items = request.resource.data.items;
+      return items is list
+        && items.size() >= 1
+        && items.size() <= 10
+        && validOrderLine(items[0])
+        && (items.size() < 2 || validOrderLine(items[1]))
+        && (items.size() < 3 || validOrderLine(items[2]))
+        && (items.size() < 4 || validOrderLine(items[3]))
+        && (items.size() < 5 || validOrderLine(items[4]))
+        && (items.size() < 6 || validOrderLine(items[5]))
+        && (items.size() < 7 || validOrderLine(items[6]))
+        && (items.size() < 8 || validOrderLine(items[7]))
+        && (items.size() < 9 || validOrderLine(items[8]))
+        && (items.size() < 10 || validOrderLine(items[9]));
+    }
+
+    function validOrderTotal() {
+      let items = request.resource.data.items;
+      let total =
+        items[0].subtotal
+        + (items.size() > 1 ? items[1].subtotal : 0)
+        + (items.size() > 2 ? items[2].subtotal : 0)
+        + (items.size() > 3 ? items[3].subtotal : 0)
+        + (items.size() > 4 ? items[4].subtotal : 0)
+        + (items.size() > 5 ? items[5].subtotal : 0)
+        + (items.size() > 6 ? items[6].subtotal : 0)
+        + (items.size() > 7 ? items[7].subtotal : 0)
+        + (items.size() > 8 ? items[8].subtotal : 0)
+        + (items.size() > 9 ? items[9].subtotal : 0);
+      return request.resource.data.subtotal == total
+        && request.resource.data.total == total;
+    }
+
+    function validPurchaseOrder() {
+      let data = request.resource.data;
+      return data.keys().hasAll([
+          'uid', 'customerType', 'customerName', 'email', 'status',
+          'paymentStatus', 'currency', 'items', 'subtotal', 'total', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'uid', 'customerType', 'customerName', 'email', 'status',
+          'paymentStatus', 'currency', 'items', 'subtotal', 'total', 'createdAt'
+        ])
+        && data.customerName is string
+        && data.customerName.size() >= 2
+        && data.customerName.size() <= 120
+        && data.email is string
+        && data.email.size() >= 5
+        && data.email.size() <= 254
+        && data.email.matches('.*@.*[.].*')
+        && data.status == 'pending'
+        && data.paymentStatus == 'unpaid'
+        && data.currency == 'USD'
+        && data.createdAt == request.time
+        && ((signedIn() && data.uid == request.auth.uid && data.customerType == 'registered')
+          || (!signedIn() && data.uid == null && data.customerType == 'guest'))
+        && validOrderItems()
+        && validOrderTotal();
     }
 
     match /products/{productId} {
@@ -60,7 +140,7 @@ service cloud.firestore {
     }
 
     match /purchaseOrders/{orderId} {
-      allow create: if false; // Purchase orders are created only by the trusted serverless API.
+      allow create: if validPurchaseOrder();
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow update, delete: if false;
     }
