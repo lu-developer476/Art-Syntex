@@ -12,6 +12,55 @@ describe('Netlify serverless API', () => {
     })
   })
 
+  it('creates a guest checkout without an Authorization header', async () => {
+    const savedOrders = []
+    const adminServices = {
+      auth: { verifyIdToken: vi.fn() },
+      db: {
+        collection(name) {
+          if (name === 'products') {
+            return { get: async () => ({ empty: true, docs: [] }) }
+          }
+          if (name === 'purchaseOrders') {
+            return {
+              doc() {
+                return {
+                  id: 'AS-GUEST-TEST',
+                  set: async (order) => savedOrders.push(order),
+                }
+              },
+            }
+          }
+          throw new Error('Unexpected collection: ' + name)
+        },
+      },
+    }
+
+    const response = await handleRequest(new Request('https://api.example/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer: { name: 'Guest Buyer', email: 'guest@example.com' },
+        items: [{ productId: 'sandevistan', quantity: 1 }],
+      }),
+    }), { adminServices })
+
+    expect(response.status).toBe(201)
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      orderId: 'AS-GUEST-TEST',
+      customerType: 'guest',
+      pdfReady: true,
+    })
+    expect(adminServices.auth.verifyIdToken).not.toHaveBeenCalled()
+    expect(savedOrders[0]).toMatchObject({
+      uid: null,
+      customerType: 'guest',
+      email: 'guest@example.com',
+      paymentStatus: 'unpaid',
+    })
+  })
+
   it('returns 404 for unknown routes', async () => {
     const response = await handleRequest(new Request('https://api.example/not-found'))
 
