@@ -1,6 +1,11 @@
 import type { ProductId } from '../data/products'
 
-export interface CheckoutCustomer {\n  name: string\n  email: string\n}\n\nexport interface CheckoutItemInput {
+export interface CheckoutCustomer {
+  name: string
+  email: string
+}
+
+export interface CheckoutItemInput {
   productId: ProductId
   quantity: number
 }
