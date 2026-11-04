@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import type { User } from 'firebase/auth'
 import type { CartItem } from '../../lib/home'
 import { formatPrice } from '../../lib/home'
@@ -34,7 +35,7 @@ export default function CartSection({
 }: CartSectionProps) {
   const { t } = useI18n()
 
-  return (
+  return createPortal(
     <>
       <div
         className={`fixed inset-0 z-40 bg-black/65 backdrop-blur-sm transition ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
@@ -43,7 +44,7 @@ export default function CartSection({
       />
       <aside
         aria-hidden={!isOpen}
-        className={`fixed bottom-0 right-0 top-0 z-50 flex min-h-0 max-h-dvh w-full max-w-md flex-col overflow-hidden border-l border-purple-300/40 bg-gradient-to-br from-[#12041f] via-black to-slate-950 shadow-2xl transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 z-50 flex h-dvh min-h-0 w-full max-w-md flex-col overflow-hidden border-l border-purple-300/40 bg-gradient-to-br from-[#12041f] via-black to-slate-950 shadow-2xl transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-purple-300/20 p-6">
           <div>
@@ -102,6 +103,7 @@ export default function CartSection({
           {message ? <p role="status" aria-live="polite" className="mt-3 text-sm text-purple-200">{message}</p> : null}
         </div>
       </aside>
-    </>
+    </>,
+    document.getElementById('root') ?? document.body,
   )
 }
