@@ -121,7 +121,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           <span className="h-2 w-2 shrink-0 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.8)]" aria-hidden="true" />
           <p
             key={tickerIndex}
-            className="min-w-0 flex-1 text-[9px] font-semibold uppercase leading-relaxed tracking-[0.12em] text-purple-100 sm:text-[10px] sm:tracking-[0.16em] md:text-[11px]"
+            className="min-w-0 flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[7px] font-semibold uppercase leading-none tracking-[0.01em] text-purple-100 sm:text-[9px] sm:tracking-[0.08em] md:text-[11px] md:tracking-[0.16em]"
           >
             {brandMessages[language][tickerIndex]}
           </p>
