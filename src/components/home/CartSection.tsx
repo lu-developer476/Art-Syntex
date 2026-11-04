@@ -43,9 +43,9 @@ export default function CartSection({
       />
       <aside
         aria-hidden={!isOpen}
-        className={`fixed right-0 top-0 z-50 flex h-full w-full max-w-md flex-col border-l border-purple-300/40 bg-gradient-to-br from-[#12041f] via-black to-slate-950 shadow-2xl transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        className={`fixed inset-y-0 right-0 z-50 flex h-dvh min-h-0 w-full max-w-md flex-col overflow-hidden border-l border-purple-300/40 bg-gradient-to-br from-[#12041f] via-black to-slate-950 shadow-2xl transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-purple-300/20 p-6">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-purple-300/20 p-6">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-purple-300/70">Carrito</p>
             <h3 className="mt-2 text-2xl font-semibold text-purple-100">Vista previa</h3>
@@ -56,7 +56,7 @@ export default function CartSection({
           <button type="button" onClick={onClose} className="rounded-full border border-purple-300/40 px-3 py-2 text-sm text-purple-100 transition hover:bg-purple-900/50">Cerrar</button>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-6">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
           {cart.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-purple-300/30 bg-purple-950/20 p-5 text-sm text-purple-200">
               Añade productos para ver el resumen y avanzar al checkout.
@@ -82,7 +82,7 @@ export default function CartSection({
           ))}
         </div>
 
-        <div className="border-t border-purple-300/20 p-6">
+        <div className="shrink-0 border-t border-purple-300/20 p-6">
           <div className="flex items-center justify-between text-sm text-purple-200">
             <span>Subtotal</span><span className="font-semibold text-purple-100">{formatPrice(cartTotal)}</span>
           </div>
